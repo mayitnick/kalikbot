@@ -47,6 +47,15 @@ def send_welcome(message):
 # Сделаем систему команд по позыву ("Джарвис, что ты умеешь?")
 @bot.message_handler(content_types=['text'])
 def nickname_commands(message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Store user information
+    db.add_or_update_user(user_id, username, first_name, last_name)
+    
     text = message.text.lower()
     text = ''.join(e for e in text if e.isalnum() or e.isspace())
     if text.startswith('джарвис'):
@@ -54,57 +63,49 @@ def nickname_commands(message):
             bot.reply_to(message, "Я могу помогать тебе с учебой, предоставлять учебные материалы и расписание.")
         elif 'все участники' in text:
             if message.chat.type in ['group', 'supergroup']:
-                chat_id = message.chat.id
                 try:
-                    members = bot.get_chat_administrators(chat_id)
-                    member_list = "\n".join([f"{member.user.id} - {member.user.first_name} {member.user.last_name if member.user.last_name else ''} (@{member.user.username if member.user.username else 'без ника'})" for member in members])
+                    members = db.get_all_users()
+                    member_list = "\n".join([f"{member['id']} - {member['first_name']} {member['last_name'] if member['last_name'] else ''} (@{member['username'] if member['username'] else 'без ника'})" for member in members])
                     bot.reply_to(message, f"Участники группы:\n{member_list}")
                 except Exception as e:
                     bot.reply_to(message, f"❌ Ошибка при получении списка участников: {e}")
             else:
                 bot.reply_to(message, "❌ Эту команду можно использовать только в группе.")
         elif 'добавь его' in text:
-            if message.reply_to_message:
-                parts = message.text.split(" ")
-                if len(parts) < 4:
-                    bot.reply_to(message, "❌ Укажи правильно: Джарвис, добавь его Фамилия Имя")
-                    return
+            parts = message.text.split(" ")
+            if len(parts) < 4:
+                bot.reply_to(message, "❌ Укажи правильно: Джарвис, добавь его <ID/username/first_name> Фамилия Имя")
+                return
 
-                surname = parts[3]
-                name = parts[4] if len(parts) > 4 else ''
-                user_id = message.reply_to_message.from_user.id
+            identifier = parts[3]
+            surname = parts[4]
+            name = parts[5] if len(parts) > 5 else ''
+
+            try:
+                user_id = int(identifier)
                 db.add_student(user_id, name, surname, 16)  # Assuming age is 16 for simplicity
                 bot.reply_to(message, f"✅ {surname} {name} добавлен в БД (id={user_id})")
-            else:
-                parts = message.text.split(" ")
-                if len(parts) < 6:
-                    bot.reply_to(message, "❌ Укажи правильно: Джарвис, добавь его @mention Фамилия Имя")
-                    return
-
-                surname = parts[4]
-                name = parts[5]
-                user_id = None
-                username = None
-
-                if message.entities:
-                    for entity in message.entities:
-                        if entity.type == "text_mention":
-                            user_id = entity.user.id
-                            username = entity.user.username
-                            break
-                        elif entity.type == "mention":
-                            username = message.text[entity.offset:entity.offset + entity.length]
-                            try:
-                                member = bot.get_chat_member(message.chat.id, username[1:])  # Remove '@' from username
-                                user_id = member.user.id
-                            except:
-                                pass
-
-                if user_id:
-                    db.add_student(user_id, name, surname, 16)  # Assuming age is 16 for simplicity
-                    bot.reply_to(message, f"✅ {surname} {name} добавлен в БД (id={user_id}, @{username if username else 'без ника'})")
+            except ValueError:
+                # Check if identifier is a username
+                username = identifier
+                if username.startswith('@'):
+                    username = username[1:]  # Remove '@' from username
+                user = db.get_user_by_username(username)
+                if user:
+                    db.add_student(user['id'], name, surname, 16)  # Assuming age is 16 for simplicity
+                    bot.reply_to(message, f"✅ {surname} {name} добавлен в БД (id={user['id']}, @{username})")
                 else:
-                    bot.reply_to(message, "❌ Не удалось получить ID. Попробуй упомянуть пользователя через список (синим).")
+                    # Check if identifier is a first_name
+                    users = db.get_users_by_first_name(identifier)
+                    if users:
+                        # Suggest users to choose from
+                        markup = types.InlineKeyboardMarkup()
+                        for user in users:
+                            button = types.InlineKeyboardButton(f"{user['first_name']} {user['last_name'] if user['last_name'] else ''} (@{user['username'] if user['username'] else 'без ника'})", callback_data=f"add_student_{user['id']}_{name}_{surname}")
+                            markup.add(button)
+                        bot.reply_to(message, f"Выберите пользователя:", reply_markup=markup)
+                    else:
+                        bot.reply_to(message, "❌ Пользователь не найден.")
 
 # ФУНКЦИИ
 def callback_answer(call):
@@ -114,17 +115,28 @@ def callback_answer(call):
         bot.send_message(call.message.chat.id, "{user} нажал на инлайн кнопку!".format(call.from_user.first_name))
         return
 
-# Пока останется тут ;)
-# Будет юзатся в будущем для всяких менюшек :3
-"""@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
+    # Добавим обработку для callback_data=f"add_student_{user['id']}_{name}_{surname}"
+    if call.data.startswith('add_student_'):
+        if call.message.chat.type == 'group':
+            parts = call.data.split('_')
+            user_id = int(parts[1])
+            name = parts[2]
+            surname = parts[3]
+            db.add_student(user_id, name, surname, 16)  # Assuming age is 16 for simplicity
+            # Ответить на сообщение
+            if call.message:
+                bot.edit_message_text(text=f"✅ {surname} {name} добавлен в БД (id={user_id})",
+                                      chat_id=call.message.chat.id,
+                                      message_id=call.message.message_id)
     if call.data == 'add_to_group':
         callback_answer(call)
         bot.send_message(call.message.chat.id, "Тест")
     elif call.data == 'schedule':
         bot.answer_callback_query(call.id, "Расписание")
     else:
-        bot.answer_callback_query(call.id, "Неизвестная команда")"""
+        bot.answer_callback_query(call.id, "Неизвестная команда")
 
 @bot.my_chat_member_handler()
 def handle_my_chat_member(update: types.ChatMemberUpdated):

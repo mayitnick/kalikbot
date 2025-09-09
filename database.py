@@ -9,6 +9,8 @@
 }
 """
 
+import json
+
 class Database:
     """
     A class to interact with the student database stored in 'database.json'.
@@ -22,6 +24,72 @@ class Database:
             filename (str): The filename of the database. Defaults to 'database.json'.
         """
         self.filename = filename
+        self.data = self.load_database()
+
+    def add_or_update_user(self, user_id: int, username: str, first_name: str, last_name: str) -> None:
+        """
+        Adds or updates a user in the database.
+        
+        Args:
+            user_id (int): The ID of the user.
+            username (str): The username of the user.
+            first_name (str): The first name of the user.
+            last_name (str): The last name of the user.
+        """
+        user = {
+            'id': user_id,
+            'username': username,
+            'first_name': first_name,
+            'last_name': last_name
+        }
+        if 'users' not in self.data:
+            self.data['users'] = []
+        existing_user = next((u for u in self.data['users'] if u['id'] == user_id), None)
+        if existing_user:
+            existing_user.update(user)
+        else:
+            self.data['users'].append(user)
+        self.save_database(self.data)
+
+    def get_all_users(self) -> list:
+        """
+        Gets all users from the database.
+        
+        Returns:
+            list: A list of all users.
+        """
+        return self.data.get('users', [])
+    
+    def get_user_by_username(self, username: str) -> dict:
+        """
+        Gets a user by their username.
+        
+        Args:
+            username (str): The username of the user.
+        
+        Returns:
+            dict: The user data, or None if not found.
+        """
+        if 'users' in self.data:
+            for user in self.data['users']:
+                if user['username'].lower() == username.lower():
+                    return user
+            return None
+    
+    def get_users_by_first_name(self, first_name: str) -> list:
+        """
+        Gets all users with the specified first name.
+        
+        Args:
+            first_name (str): The first name of the users.
+        
+        Returns:
+            list: A list of users with the specified first name.
+        """
+        if 'users' in self.data:
+            return [user for user in self.data['users'] if user['first_name'].lower() == first_name.lower()]
+        else:
+            return []
 
     def load_database(self) -> dict:
         """
@@ -56,10 +124,9 @@ class Database:
             surname (str): The surname of the student.
             age (int): The age of the student.
         """
-        data = self.load_database()
         new_student = {"id": student_id, "name": name, "surname": surname, "age": age, "paired_with": None}
-        data["students"].append(new_student)
-        self.save_database(data)
+        self.data["students"].append(new_student)
+        self.save_database(self.data)
 
     def remove_student(self, student_id: int) -> None:
         """

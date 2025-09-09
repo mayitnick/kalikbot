@@ -1,0 +1,16 @@
+# Virtual environment directory
+venv/
+.venv/
+
+# Compiled Python files
+__pycache__/
+
+# Editor and IDE configuration
+.vscode/
+
+# Operating system files
+Thumbs.db
+.DS_Store
+
+# Environment file
+.env

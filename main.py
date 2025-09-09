@@ -11,11 +11,11 @@
 #                                                   $$ |                          
 #                                                   \__|                          
 # Created by: MayITNick!
-# Copyright is zipped ;)
                                                
 import os
 from telebot import types, TeleBot
 from dotenv import load_dotenv
+from database import Database
 
 load_dotenv()
 
@@ -23,6 +23,7 @@ TOKEN = os.getenv('TOKEN')
 FOUNDER_ID = os.getenv('FOUNDER_ID')
 
 bot = TeleBot(TOKEN)
+db = Database()
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -34,7 +35,76 @@ def send_welcome(message):
         markup.add(button1)
         bot.reply_to(message, "Привет! Я IS-Helper бот. Я здесь, чтобы помогать тебе с учебой.", reply_markup=markup)
     elif message.chat.type in ['group', 'supergroup']:
-        bot.reply_to(message, f"Привет! Я добавлен в эту группу пользователем {message.from_user.first_name}!")
+        chat_id = message.chat.id
+        chat_member = bot.get_chat_member(chat_id, bot.get_me().id)
+        if chat_member.status in ['administrator', 'member']:
+            markup = types.InlineKeyboardMarkup()
+            button1 = types.InlineKeyboardButton("Учебные материалы", callback_data='materials')
+            button2 = types.InlineKeyboardButton("Расписание", callback_data='schedule')
+            markup.add(button1, button2)
+            bot.reply_to(message, "Меню действий:", reply_markup=markup)
+
+# Сделаем систему команд по позыву ("Джарвис, что ты умеешь?")
+@bot.message_handler(content_types=['text'])
+def nickname_commands(message):
+    text = message.text.lower()
+    text = ''.join(e for e in text if e.isalnum() or e.isspace())
+    if text.startswith('джарвис'):
+        if 'что ты умеешь' in text or 'что ты можешь' in text:
+            bot.reply_to(message, "Я могу помогать тебе с учебой, предоставлять учебные материалы и расписание.")
+        elif 'все участники' in text:
+            if message.chat.type in ['group', 'supergroup']:
+                chat_id = message.chat.id
+                try:
+                    members = bot.get_chat_administrators(chat_id)
+                    member_list = "\n".join([f"{member.user.id} - {member.user.first_name} {member.user.last_name if member.user.last_name else ''} (@{member.user.username if member.user.username else 'без ника'})" for member in members])
+                    bot.reply_to(message, f"Участники группы:\n{member_list}")
+                except Exception as e:
+                    bot.reply_to(message, f"❌ Ошибка при получении списка участников: {e}")
+            else:
+                bot.reply_to(message, "❌ Эту команду можно использовать только в группе.")
+        elif 'добавь его' in text:
+            if message.reply_to_message:
+                parts = message.text.split(" ")
+                if len(parts) < 4:
+                    bot.reply_to(message, "❌ Укажи правильно: Джарвис, добавь его Фамилия Имя")
+                    return
+
+                surname = parts[3]
+                name = parts[4] if len(parts) > 4 else ''
+                user_id = message.reply_to_message.from_user.id
+                db.add_student(user_id, name, surname, 16)  # Assuming age is 16 for simplicity
+                bot.reply_to(message, f"✅ {surname} {name} добавлен в БД (id={user_id})")
+            else:
+                parts = message.text.split(" ")
+                if len(parts) < 6:
+                    bot.reply_to(message, "❌ Укажи правильно: Джарвис, добавь его @mention Фамилия Имя")
+                    return
+
+                surname = parts[4]
+                name = parts[5]
+                user_id = None
+                username = None
+
+                if message.entities:
+                    for entity in message.entities:
+                        if entity.type == "text_mention":
+                            user_id = entity.user.id
+                            username = entity.user.username
+                            break
+                        elif entity.type == "mention":
+                            username = message.text[entity.offset:entity.offset + entity.length]
+                            try:
+                                member = bot.get_chat_member(message.chat.id, username[1:])  # Remove '@' from username
+                                user_id = member.user.id
+                            except:
+                                pass
+
+                if user_id:
+                    db.add_student(user_id, name, surname, 16)  # Assuming age is 16 for simplicity
+                    bot.reply_to(message, f"✅ {surname} {name} добавлен в БД (id={user_id}, @{username if username else 'без ника'})")
+                else:
+                    bot.reply_to(message, "❌ Не удалось получить ID. Попробуй упомянуть пользователя через список (синим).")
 
 # ФУНКЦИИ
 def callback_answer(call):
@@ -44,7 +114,9 @@ def callback_answer(call):
         bot.send_message(call.message.chat.id, "{user} нажал на инлайн кнопку!".format(call.from_user.first_name))
         return
 
-@bot.callback_query_handler(func=lambda call: True)
+# Пока останется тут ;)
+# Будет юзатся в будущем для всяких менюшек :3
+"""@bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     if call.data == 'add_to_group':
         callback_answer(call)
@@ -52,19 +124,23 @@ def callback_handler(call):
     elif call.data == 'schedule':
         bot.answer_callback_query(call.id, "Расписание")
     else:
-        bot.answer_callback_query(call.id, "Неизвестная команда")
+        bot.answer_callback_query(call.id, "Неизвестная команда")"""
 
 @bot.my_chat_member_handler()
 def handle_my_chat_member(update: types.ChatMemberUpdated):
+    chat = update.chat
     old_member = update.old_chat_member
     new_member = update.new_chat_member
-    if new_member.status == 'member':
-        user_id = update.from_user.id
-        chat_id = new_member.chat.id
-        chat_title = new_member.chat.title
+    if new_member.status == 'member' and old_member.status != 'member':
+        chat_id = chat.id
+        chat_title = chat.title
         user_name = update.from_user.first_name
-        bot.send_message(user_id, f"Я добавлен в группу '{chat_title}'!")
-        bot.send_message(chat_id, f"Привет! Я добавлен в эту группу пользователем {user_name}!")
+        user_id = update.from_user.id
+        bot.send_message(chat_id, f"Привет! Я добавлен в эту группу '{chat_title}' пользователем {user_name}!")
+        try:
+            bot.send_message(user_id, f"Я добавлен в группу '{chat_title}'!")
+        except Exception as e:
+            print(f"Failed to send message to user {user_id}: {e}")
 
 print("[DEBUG] Bot started")
 bot.infinity_polling()

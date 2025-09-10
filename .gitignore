@@ -14,3 +14,7 @@ Thumbs.db
 
 # Environment file
 .env
+
+# Database File
+database.json
+students.json

@@ -1,172 +1,123 @@
-# Напишем бд на json, чтобы хранить всех учеников
-# Сначала напишем то, как будет выглядеть структура бд
-"""
-{
-    "students": [
-        {"id": 1408266288, "name": "Арсений", "surname": "Белокуров", "age": 16, "paired_with": "6437541376"}
-        {"id": 6437541376, "name": "Елисей", "surname": "Николаев", "age": 16, "paired_with": "1408266288"}
-    ]
-}
-"""
-
 import json
+import os
 
 class Database:
-    """
-    A class to interact with the student database stored in 'database.json'.
-    """
-
-    def __init__(self, filename='database.json'):
-        """
-        Initializes the Database object.
-        
-        Args:
-            filename (str): The filename of the database. Defaults to 'database.json'.
-        """
+    def __init__(self, filename='students.json'):
         self.filename = filename
-        self.data = self.load_database()
+        self.data = {"students": []}  # корневой объект
+        self.load()
 
-    def add_or_update_user(self, user_id: int, username: str, first_name: str, last_name: str) -> None:
-        """
-        Adds or updates a user in the database.
-        
-        Args:
-            user_id (int): The ID of the user.
-            username (str): The username of the user.
-            first_name (str): The first name of the user.
-            last_name (str): The last name of the user.
-        """
+    def load(self):
+        """Загружает БД из файла или создаёт новый файл."""
+        if os.path.exists(self.filename):
+            try:
+                with open(self.filename, 'r', encoding='utf-8') as file:
+                    self.data = json.load(file)
+                    if "students" not in self.data:
+                        # если старая структура — пересоздать
+                        self.data = {"students": []}
+            except json.JSONDecodeError:
+                print("Ошибка JSON. Создаю новую базу.")
+                self.data = {"students": []}
+                self.save()
+        else:
+            print("Файл не найден. Создаю новый.")
+            self.save()
+
+    def save(self):
+        """Сохраняет БД в файл."""
+        with open(self.filename, 'w', encoding='utf-8') as file:
+            json.dump(self.data, file, ensure_ascii=False, indent=4)
+
+    def add_user(self, telegram_id, telegram_username, full_name,
+                 user_type="guest", group=None, age=None):
+        """Добавляет нового пользователя в БД."""
+        existing = self.get_user_by_id(telegram_id)
+        if existing:
+            print(f"Пользователь {full_name} ({telegram_id}) уже есть в БД.")
+            return existing
+
         user = {
-            'id': user_id,
-            'username': username,
-            'first_name': first_name,
-            'last_name': last_name
+            "telegram_id": telegram_id,
+            "telegram_username": telegram_username,
+            "full_name": full_name,
+            "type": user_type,  # guest | student | curator | admin | founder
+            "group": group,
+            "age": age,
+            "duty_info": None if user_type == "student" else None
         }
-        if 'users' not in self.data:
-            self.data['users'] = []
-        existing_user = next((u for u in self.data['users'] if u['id'] == user_id), None)
-        if existing_user:
-            existing_user.update(user)
-        else:
-            self.data['users'].append(user)
-        self.save_database(self.data)
 
-    def get_all_users(self) -> list:
-        """
-        Gets all users from the database.
-        
-        Returns:
-            list: A list of all users.
-        """
-        return self.data.get('users', [])
-    
-    def get_user_by_username(self, username: str) -> dict:
-        """
-        Gets a user by their username.
-        
-        Args:
-            username (str): The username of the user.
-        
-        Returns:
-            dict: The user data, or None if not found.
-        """
-        if 'users' in self.data:
-            for user in self.data['users']:
-                if user['username'].lower() == username.lower():
-                    return user
+        self.data["students"].append(user)
+        self.save()
+        print(f"Пользователь {full_name} ({telegram_id}) добавлен как {user_type}.")
+        return user
+
+    def upgrade_user(self, telegram_id, new_type, group=None):
+        """Меняет тип пользователя (например, guest -> student)."""
+        user = self.get_user_by_id(telegram_id)
+        if not user:
+            print("Пользователь не найден.")
             return None
-    
-    def get_users_by_first_name(self, first_name: str) -> list:
-        """
-        Gets all users with the specified first name.
-        
-        Args:
-            first_name (str): The first name of the users.
-        
-        Returns:
-            list: A list of users with the specified first name.
-        """
-        if 'users' in self.data:
-            return [user for user in self.data['users'] if user['first_name'].lower() == first_name.lower()]
-        else:
-            return []
 
-    def load_database(self) -> dict:
-        """
-        Loads the database from the specified file.
-        
-        Returns:
-            dict: The loaded database.
-        """
-        try:
-            with open(self.filename, 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {"students": []}
+        user["type"] = new_type
+        if new_type == "student":
+            user["group"] = group
+            if user["duty_info"] is None:
+                user["duty_info"] = {
+                    "last_duty": None,
+                    "amount_of_duties": 0,
+                    "pair_id": None,
+                    "preferences": []
+                }
+        elif new_type in ["curator", "admin", "founder"]:
+            user["group"] = group if new_type == "curator" else None
+            user["duty_info"] = None
 
-    def save_database(self, data: dict) -> None:
-        """
-        Saves the database to the specified file.
-        
-        Args:
-            data (dict): The database to save.
-        """
-        with open(self.filename, 'w') as f:
-            json.dump(data, f, indent=4)
+        self.save()
+        print(f"Пользователь {user['first_name']} теперь {new_type}.")
+        return user
 
-    def add_student(self, student_id: int, name: str, surname: str, age: int) -> None:
-        """
-        Adds a new student to the database.
-        
-        Args:
-            student_id (int): The ID of the student.
-            name (str): The name of the student.
-            surname (str): The surname of the student.
-            age (int): The age of the student.
-        """
-        new_student = {"id": student_id, "name": name, "surname": surname, "age": age, "paired_with": None}
-        self.data["students"].append(new_student)
-        self.save_database(self.data)
-
-    def remove_student(self, student_id: int) -> None:
-        """
-        Removes a student from the database.
-        
-        Args:
-            student_id (int): The ID of the student to remove.
-        """
-        data = self.load_database()
-        data["students"] = [student for student in data["students"] if student["id"] != student_id]
-        self.save_database(data)
-
-    def update_student(self, student_id: int, paired_with: int) -> None:
-        """
-        Updates a student's paired_with field in the database.
-        
-        Args:
-            student_id (int): The ID of the student to update.
-            paired_with (int): The ID to pair the student with.
-        """
-        data = self.load_database()
-        for student in data["students"]:
-            if student["id"] == student_id:
-                student["paired_with"] = paired_with
-                break
-        self.save_database(data)
-
-    def get_student(self, student_id: int) -> dict:
-        """
-        Retrieves a student from the database by their ID.
-        
-        Args:
-            student_id (int): The ID of the student to retrieve.
-        
-        Returns:
-            dict: The student's data, or None if not found.
-        """
-        data = self.load_database()
-        for student in data["students"]:
-            if student["id"] == student_id:
-                return student
+    def get_user_by_id(self, telegram_id):
+        for user in self.data["students"]:
+            if user["telegram_id"] == telegram_id:
+                return user
         return None
+
+    def get_user_by_username(self, telegram_username):
+        for user in self.data["students"]:
+            if user["telegram_username"] == telegram_username:
+                return user
+        return None
+
+    def get_all_users(self):
+        return self.data["students"]
+    
+    def upgrade_to_student(self, telegram_id, group):
+        """Апгрейд пользователя до студента."""
+        return self.upgrade_user(telegram_id, new_type="student", group=group)
+
+    def upgrade_to_curator(self, telegram_id, group):
+        """Апгрейд пользователя до куратора."""
+        return self.upgrade_user(telegram_id, new_type="curator", group=group)
+
+    def upgrade_to_admin(self, telegram_id):
+        """Апгрейд пользователя до админа."""
+        return self.upgrade_user(telegram_id, new_type="admin")
+
+    def upgrade_to_founder(self, telegram_id):
+        """Апгрейд пользователя до основателя."""
+        return self.upgrade_user(telegram_id, new_type="founder")
+    
+    def update_user_field(self, telegram_id, field, value):
+        """Обновляет или добавляет указанное поле у пользователя."""
+        user = self.get_user_by_id(telegram_id)
+        if not user:
+            print("Пользователь не найден.")
+            return None
+
+        old_value = user.get(field, None)
+        user[field] = value
+        self.save()
+        print(f"Поле '{field}' пользователя {user.get('full_name', telegram_id)} изменено: {old_value} -> {value}")
+        return user
 

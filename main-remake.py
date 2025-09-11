@@ -15,6 +15,7 @@
 from telebot import types, TeleBot
 from dotenv import load_dotenv
 import constants
+import traceback
 import database
 import random
 import time
@@ -26,7 +27,7 @@ db = database.Database()
 CONSTANTS = constants.CONSTANTS
 bot = TeleBot(os.getenv('TOKEN'))
 
-FOUNDER_ID = os.getenv('FOUNDER_ID')
+FOUNDER_ID = int(os.getenv('FOUNDER_ID'))
 
 def check_for_kalik(message):
     # Если сообщение начинается с "калик", в любом регистре, то возвращаем True
@@ -34,6 +35,30 @@ def check_for_kalik(message):
         return True
     else:
         return False
+
+def check_for_permissions(user_type, permission):
+    if user_type == "admin":
+        if permission == "give.student":
+            return True
+        if permission == "give.curator":
+            return True
+        if permission == "give.elder":
+            return True
+        else:
+            return False
+    if user_type == "curator":
+        if permission == "give.student":
+            return True
+        if permission == "give.elder":
+            return True
+        else:
+            return False
+    if user_type == "elder":
+        if permission == "give.student":
+            return True
+        else:
+            return False
+
 
 def check_for_admin(message):
     user = db.get_user_by_id(message.from_user.id)
@@ -46,6 +71,10 @@ def check_for_admin(message):
         return True
     else:
         return False
+
+def get_url_from_id(full_name, id):
+    # [Имя](tg://user?id=123456789)
+    return f"[{full_name}](tg://user?id={id})"
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -86,6 +115,8 @@ def kalik(message):
         # Узнаём айди по реплаю
         # А так же, пытаемся узнать по упоминанию
         # Третий аргумент - упоминание
+        if "мой" in message.text.lower():
+            bot.reply_to(message, f"Айди: {message.from_user.id}")
         if message.reply_to_message:
             bot.reply_to(message, f"Айди: {message.reply_to_message.from_user.id}")
         elif len(parts) > 2:
@@ -109,7 +140,9 @@ def kalik(message):
     elif "обо мне" in message.text.lower():
         user = db.get_user_by_id(message.from_user.id)
         if user:
-            bot.reply_to(message, f"Тебя зовут {user['full_name']}, айди {user['telegram_id']}")
+            full_name = user["full_name"]
+            bot.reply_to(message,
+                            f"Информация о {get_url_from_id(full_name, message.from_user.id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")
     elif "изменить имя" in message.text.lower():
         try:
             # пытаемся изменить имя у айди parts[3]
@@ -121,6 +154,62 @@ def kalik(message):
             bot.reply_to(message, f"Имя студента {user['telegram_id']} изменено на {new_full_name}!")
         except:
             bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, изменить имя 12345678 Фамилия Имя". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+    elif "о нём" in message.text.lower():
+        try:
+            user_id = int(parts[3])
+            if message.reply_to_message:
+                reply_to_message_id = message.reply_to_message.from_user.id
+                user = db.get_user_by_id(reply_to_message_id)
+                if user:
+                    full_name = user["full_name"]
+                    bot.reply_to(message,
+                                f"Информация о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")                    
+            else:
+                user = db.get_user_by_id(user_id)
+                full_name = user["full_name"]
+                bot.reply_to(message,
+                            f"Информация о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")
+        except:
+            bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, о нём 12345678". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+    elif "измени тип" in message.text.lower():
+        try:
+            user_id = int(parts[3])
+            
+            # Проверяем, может ли человек выполнять эту команду
+            # Он должен быть старостой, куратором, админом или основателем
+            if message.reply_to_message:
+                reply_to_message_id = message.reply_to_message.from_user.id
+                user = db.get_user_by_id(reply_to_message_id)
+                if check_for_permissions(user["type"], f"give.{parts[3]}"):
+                    if user:
+                        db.update_user_field(reply_to_message_id, "type", parts[3])
+                        bot.reply_to(message, f"Тип студента {user['telegram_id']} изменён на {parts[3]}!")
+                    else:
+                        bot.reply_to("Пользователь не найден. (я увидел, что ты ответил на сообщение, но не нашёл пользователя в БД)")
+                else:
+                    if message.from_user.id == FOUNDER_ID:
+                        db.update_user_field(user_id, "type", parts[4])
+                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nТип студента {user['telegram_id']} изменён на {parts[4]}!")
+                    else:
+                        bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+            else:
+                user = db.get_user_by_id(user_id)
+                if check_for_permissions(user["type"], f"give.{parts[4]}"):
+                    if user:
+                        db.update_user_field(user_id, "type", parts[4])
+                        bot.reply_to(message, f"Тип студента {user['telegram_id']} изменён на {parts[4]}!")
+                    else:
+                        bot.reply_to("Пользователь не найден. (я увидел, что ты указал айди, но не нашёл пользователя в БД)")
+                else:
+                    if message.from_user.id == FOUNDER_ID:
+                        db.update_user_field(user_id, "type", parts[4])
+                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nТип студента {user['telegram_id']} изменён на {parts[4]}!")
+                    else:
+                        bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+
+        except Exception as e:
+            bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, измени тип 12345678 student/elder/curator/admin". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+            traceback.print_exc()
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 

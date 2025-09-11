@@ -180,7 +180,8 @@ def kalik(message):
             if message.reply_to_message:
                 reply_to_message_id = message.reply_to_message.from_user.id
                 user = db.get_user_by_id(reply_to_message_id)
-                if check_for_permissions(user["type"], f"give.{parts[3]}"):
+                author = db.get_user_by_id(message.from_user.id)
+                if check_for_permissions(author["type"], f"give.{parts[3]}"):
                     if user:
                         db.update_user_field(reply_to_message_id, "type", parts[3])
                         bot.reply_to(message, f"Тип студента {user['telegram_id']} изменён на {parts[3]}!")
@@ -193,8 +194,9 @@ def kalik(message):
                     else:
                         bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
             else:
+                author = db.get_user_by_id(message.from_user.id)
                 user = db.get_user_by_id(user_id)
-                if check_for_permissions(user["type"], f"give.{parts[4]}"):
+                if check_for_permissions(author["type"], f"give.{parts[4]}"):
                     if user:
                         db.update_user_field(user_id, "type", parts[4])
                         bot.reply_to(message, f"Тип студента {user['telegram_id']} изменён на {parts[4]}!")

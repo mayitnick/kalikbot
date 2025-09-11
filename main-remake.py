@@ -62,11 +62,13 @@ def start(message):
 def message_listener(message):
     # Запоминаем =3
     author = message.from_user
+    last_name = author.last_name
+    if not last_name:
+        last_name = ""
     if not db.get_user_by_id(author.id):
         db.add_user(telegram_id=author.id,
                     telegram_username=author.username,
-                    first_name=author.first_name,
-                    last_name=author.last_name)
+                    full_name=author.first_name + last_name)
     if check_for_kalik(message):
         kalik(message)
     
@@ -79,7 +81,7 @@ def kalik(message):
         sent_msg = bot.send_message(message.chat.id, 'Пингую...')
         end = time.time()
         ping_ms = int((end - start) * 1000)
-        bot.edit_message_text(f'Пинг: {ping_ms} мс', chat_id=message.chat.id, message_id=sent_msg.message_id)
+        bot.edit_message_text(f'Мой пинг: {ping_ms} мс. Хорошо считаю, правда? :3', chat_id=message.chat.id, message_id=sent_msg.message_id)
     elif "айди" in message.text.lower():
         # Узнаём айди по реплаю
         # А так же, пытаемся узнать по упоминанию
@@ -101,18 +103,27 @@ def kalik(message):
         else:
             bot.reply_to(message, "Я не могу найти айди, если ты не ответил на сообщение")
     elif "тут" in message.text.lower():
-        bot.send_message(message.chat.id, 'Я тут)')
+        bot.reply_to(message, 'Я тут)')
+    elif "умеешь" in message.text.lower():
+        bot.reply_to(message, 'Я пока мало что умею. Но я буду старатся учится, честно-честно!')
     elif "обо мне" in message.text.lower():
         user = db.get_user_by_id(message.from_user.id)
         if user:
             bot.reply_to(message, f"Тебя зовут {user['full_name']}, айди {user['telegram_id']}")
     elif "изменить имя" in message.text.lower():
-        # пытаемся изменить имя у айди parts[3]
-        user_id = int(parts[3])
-        # parts[4] до последнего слова
-        new_full_name = " ".join(parts[4:])
-        user = db.get_user_by_id(user_id)
-        db.update_user_field(user_id, "full_name", new_full_name)
-        bot.reply_to(message, f"Имя студента {user['telegram_id']} изменено на {new_full_name}!")
+        try:
+            # пытаемся изменить имя у айди parts[3]
+            user_id = int(parts[3])
+            # parts[4] до последнего слова
+            new_full_name = " ".join(parts[4:])
+            user = db.get_user_by_id(user_id)
+            db.update_user_field(user_id, "full_name", new_full_name)
+            bot.reply_to(message, f"Имя студента {user['telegram_id']} изменено на {new_full_name}!")
+        except:
+            bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, изменить имя 12345678 Фамилия Имя". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+    else:
+        bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 
+me = bot.get_me()
+print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")
 bot.infinity_polling()

@@ -17,7 +17,7 @@
    ```bash
    git clone https://github.com/VayLorm/Kalikbot.git
    cd Kalik
-````
+   ```
 
 2. Создай файл `.env` и добавь туда:
 

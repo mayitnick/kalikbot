@@ -1,0 +1,15 @@
+{
+    "admin": [
+        "give.student",
+        "give.curator",
+        "give.elder"
+    ],
+    "curator": [
+        "give.elder",
+        "give.student"
+    ],
+    "elder": [
+        "give.student",
+        "duty.reroll"
+    ]
+}

@@ -78,10 +78,14 @@ class Database:
         return user
 
     def get_user_by_id(self, telegram_id):
-        for user in self.data["students"]:
-            if user["telegram_id"] == telegram_id:
-                return user
-        return None
+        try:
+            for user in self.data["students"]:
+                if user["telegram_id"] == int(telegram_id):
+                    return user
+            return None
+        except Exception as e:
+            print(f"Ошибка: {e}")
+            return None
 
     def get_user_by_username(self, telegram_username):
         for user in self.data["students"]:

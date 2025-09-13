@@ -2,11 +2,13 @@
     "admin": [
         "give.student",
         "give.curator",
-        "give.elder"
+        "give.elder",
+        "group.invite"
     ],
     "curator": [
         "give.elder",
-        "give.student"
+        "give.student",
+        "group.invite"
     ],
     "elder": [
         "give.student",

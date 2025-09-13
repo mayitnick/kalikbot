@@ -182,13 +182,47 @@ def kalik(message):
                 if message.from_user.id == FOUNDER_ID:
                     if user:
                         db.update_user_field(user_id, "type", role)
-                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nТип студента {user['telegram_id']} изменён на {parts[3]}!")
+                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nТип студента {user['telegram_id']} изменён на {role}!")
                     else:
                         bot.reply_to(message, "Ты хоть и всемогущий, но я не нашёл пользователя ;(")
                 else:
                     bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
         except Exception as e:
             bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, измени тип 12345678 student/elder/curator/admin". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+            traceback.print_exc()
+    elif "в группу" in message.text.lower():
+        try:
+            # Калик, в группу 12345678 group_name
+            # или
+            # Калик, в группу group_name (с ответом на сообщение)
+            user_id = parts[3]
+            
+            author = db.get_user_by_id(message.from_user.id)
+            
+            # Если есть ответ на сообщение
+            user, is_reply = if_reply_to_message(message, user_id)
+            
+            # Если ответил на сообщение, то parts[3] - роль, если не ответил, то parts[4], т.к. parts[3] - это айди
+            group_name = parts[3] if is_reply else parts[4]
+            user_id = int(user_id) if not is_reply else message.reply_to_message.from_user.id
+            
+            if perm.check_for_permissions(author["type"], f"group.invite"):
+                if user:
+                    db.update_user_field(user_id, "group", group_name)
+                    bot.reply_to(message, f"Группа студента {user['telegram_id']} изменена на {group_name}!")
+                else:
+                    bot.reply_to("Пользователь не найден.")
+            else:
+                if message.from_user.id == FOUNDER_ID:
+                    if user:
+                        db.update_user_field(user_id, "type", group_name)
+                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nГруппа студента {user['telegram_id']} изменена на {group_name}!")
+                    else:
+                        bot.reply_to(message, "Ты хоть и всемогущий, но я не нашёл пользователя ;(")
+                else:
+                    bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+        except Exception as e:
+            bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, в группу 12345678 group_name". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
             traceback.print_exc()
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))

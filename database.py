@@ -15,7 +15,7 @@ class Database:
                     self.data = json.load(file)
                     if "students" not in self.data:
                         # если старая структура — пересоздать
-                        self.data = {"students": []}
+                        self.data = {"students": [], "groups": []}
             except json.JSONDecodeError:
                 print("Ошибка JSON. Создаю новую базу.")
                 self.data = {"students": []}
@@ -216,3 +216,13 @@ class Database:
             self.save()
             print(f"Telegram ID группы {group_name} установлен.")
             return True
+    def remove_student(self, group_name, student_id):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            if student_id in group["students"]:
+                group["students"].remove(student_id)
+                self.save()
+                print(f"Студент {student_id} удален из группы {group_name}.")
+                return True
+    def get_all_groups(self):
+        return self.data["groups"]

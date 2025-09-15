@@ -13,6 +13,7 @@
 
 # Импортируем необходимые библиотеки
 from telebot import types, TeleBot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from dotenv import load_dotenv
 import modules.constants as constants
 import modules.permissions as permissions
@@ -202,21 +203,28 @@ def kalik(message):
             # Если есть ответ на сообщение
             user, is_reply = if_reply_to_message(message, user_id)
             
-            # Если ответил на сообщение, то parts[3] - роль, если не ответил, то parts[4], т.к. parts[3] - это айди
             group_name = parts[3] if is_reply else parts[4]
             user_id = int(user_id) if not is_reply else message.reply_to_message.from_user.id
+            group = db.get_group_by_name(group_name)
             
             if perm.check_for_permissions(author["type"], f"group.invite"):
                 if user:
-                    db.update_user_field(user_id, "group", group_name)
-                    bot.reply_to(message, f"Группа студента {user['telegram_id']} изменена на {group_name}!")
+                    # db.update_user_field(user_id, "group", group_name)
+                    if group:
+                        db.add_student(group_name, user_id)
+                        bot.reply_to(message, f"Группа студента {user['telegram_id']} изменена на {group_name}!")
+                    else:
+                        bot.reply_to(message, f"Группа {group_name} не найдена.")
                 else:
                     bot.reply_to("Пользователь не найден.")
             else:
                 if message.from_user.id == FOUNDER_ID:
                     if user:
-                        db.update_user_field(user_id, "group", group_name)
-                        bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nГруппа студента {user['telegram_id']} изменена на {group_name}!")
+                        if group:
+                            db.add_student(group_name, user_id)
+                            bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nГруппа студента {user['telegram_id']} изменена на {group_name}!")
+                        else:
+                            bot.reply_to(message, f"Группа {group_name} не найдена.")
                     else:
                         bot.reply_to(message, "Ты хоть и всемогущий, но я не нашёл пользователя ;(")
                 else:
@@ -228,15 +236,60 @@ def kalik(message):
         # Пытаемся узнать всех участников группы
         # Пока тестово, без проверки на права
         group_name = parts[3]
-        users = db.get_all_users()
-        message_to_reply = f"Все студенты группы {group_name}:\n"
-        a = 0
-        for i in users:
-            if i["group"] == group_name:
-                a += 1
-                url = get_url_from_id(i["full_name"], i["telegram_id"])
-                message_to_reply += f"{a}. {url}\n"
-        bot.reply_to(message, message_to_reply)
+        group = db.get_group_by_name(group_name)
+        if group:
+            if message.from_user.id == FOUNDER_ID:
+                # В группе в студентах хранятся только айди
+                students = []
+                for user in group["students"]:
+                    user = db.get_user_by_id(user)
+                    students.append(user)
+                bot.reply_to(message, f"Группа {group['group']} состоит из {len(group['students'])} человек:\n{', '.join([get_url_from_id(user['full_name'], user['telegram_id']) for user in students])}")
+            else:
+                bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+    elif "создать группу" in message.text.lower():
+        author = db.get_user_by_id(message.from_user.id)
+        if perm.check_for_permissions(author["type"], "group.create"):
+            group_name = parts[3]
+            if db.get_group_by_name(group_name):
+                bot.reply_to(message, f"Группа {group_name} уже существует!")
+            else:
+                db.create_group(group_name)
+                bot.reply_to(message, f"Группа {group_name} создана!")
+        else:
+            if message.from_user.id == FOUNDER_ID:
+                group_name = parts[3]
+                if db.get_group_by_name(group_name):
+                    bot.reply_to(message, f"Группа {group_name} уже существует!")
+                else:
+                    db.create_group(group_name)
+                    bot.reply_to(message, f"Группа {group_name} создана!")
+            else:
+                bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+    elif "кик из группы" in message.text.lower():
+        # Калик, кик из группы 12345678 group_name
+        author = db.get_user_by_id(message.from_user.id)
+        
+        if perm.check_for_permissions(author["type"], f"group.kick"):
+            user_id = parts[4]
+            group_name = parts[5]
+            user_id = int(user_id)
+            group = db.get_group_by_name(group_name)
+            if group:
+                if user_id in group["users"]:
+                    if db.remove_student(group_name, user_id):
+                        bot.reply_to(message, f"Студент {user_id} успешно исключён из группы {group_name}!")
+                    else:
+                        bot.reply_to(message, f"Что-то пошло не так. Попробуйте ещё раз.")
+    elif "группы" in message.text.lower():
+        # Выведем все группы под сообщение как Inline кнопки
+        if message.from_user.id == FOUNDER_ID:
+            groups = db.get_all_groups()
+            if groups:
+                markup = InlineKeyboardMarkup()
+                for group in groups:
+                    markup.add(InlineKeyboardButton(text=group["group"], callback_data=f"group.{group['group']}"))
+                bot.reply_to(message, "Выберите группу:", reply_markup=markup)
     elif "помощь" in message.text.lower():
         bot.reply_to(message, "чем помочь? могу только тем, что есть в доках https://vaylorm.github.io/kalikbot-docs/")
     elif "создал" in message.text.lower():
@@ -245,6 +298,16 @@ def kalik(message):
         bot.reply_to(message, "Всегда отдавай честь брату инженера!")
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    data = call.data
+    if data.startswith("group."):
+        if call.from_user.id == FOUNDER_ID:
+            group_name = data.split(".")[1]
+            group = db.get_group_by_name(group_name)
+            # Доделать надо, я спать :|
+
 
 me = bot.get_me()
 print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")

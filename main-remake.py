@@ -215,7 +215,7 @@ def kalik(message):
             else:
                 if message.from_user.id == FOUNDER_ID:
                     if user:
-                        db.update_user_field(user_id, "type", group_name)
+                        db.update_user_field(user_id, "group", group_name)
                         bot.reply_to(message, f"У тебя нет прав, но так как ты - основатель, я всё равно сделаю это!\nГруппа студента {user['telegram_id']} изменена на {group_name}!")
                     else:
                         bot.reply_to(message, "Ты хоть и всемогущий, но я не нашёл пользователя ;(")

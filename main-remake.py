@@ -112,7 +112,7 @@ def kalik(message):
     elif "тут" in message.text.lower():
         bot.reply_to(message, 'Я тут)')
     elif "умеешь" in message.text.lower():
-        bot.reply_to(message, 'Я пока мало что умею. Но я буду старатся учится, честно-честно!')
+        bot.reply_to(message, 'Я пока мало что умею. Но я буду старатся учится, честно-честно!\nОбо мне можно прочитать на вики, где всё подробно расфыркано: https://vaylorm.github.io/kalikbot-docs/')
     elif "обо мне" in message.text.lower():
         user = db.get_user_by_id(message.from_user.id)
         if user:
@@ -237,7 +237,6 @@ def kalik(message):
                 url = get_url_from_id(i["full_name"], i["telegram_id"])
                 message_to_reply += f"{a}. {url}\n"
         bot.reply_to(message, message_to_reply)
-        
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 

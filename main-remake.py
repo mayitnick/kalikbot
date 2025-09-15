@@ -237,6 +237,12 @@ def kalik(message):
                 url = get_url_from_id(i["full_name"], i["telegram_id"])
                 message_to_reply += f"{a}. {url}\n"
         bot.reply_to(message, message_to_reply)
+    elif "помощь" in message.text.lower():
+        bot.reply_to(message, "чем помочь? могу только тем, что есть в доках https://vaylorm.github.io/kalikbot-docs/")
+    elif "создал" in message.text.lower():
+        bot.reply_to(message, "Меня создал величайший VayLorm! Он же @MayITNick. Он меня наделил всеми теми репликами, которыми я обнимаю вас каждый день!\nВ общем, топ челик!")
+    elif "пасхалка" in message.text.lower():
+        bot.reply_to(message, "Всегда отдавай честь брату инженера!")
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 

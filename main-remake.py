@@ -118,7 +118,7 @@ def kalik(message):
         if user:
             full_name = user["full_name"]
             bot.reply_to(message,
-                            f"Информация о {get_url_from_id(full_name, message.from_user.id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")
+                            f"Информация о {get_url_from_id(full_name, message.from_user.id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
     elif "изменить имя" in message.text.lower():
         try:
             # пытаемся изменить имя у айди parts[3]
@@ -130,7 +130,7 @@ def kalik(message):
             bot.reply_to(message, f"Имя студента {user['telegram_id']} изменено на {new_full_name}!")
         except:
             bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, изменить имя 12345678 Фамилия Имя". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
-    elif "о нём" in message.text.lower():
+    elif "узнать о" in message.text.lower():
         try:
             if message.reply_to_message:
                 user_id = message.reply_to_message.from_user.id
@@ -144,14 +144,14 @@ def kalik(message):
                     if user:
                         full_name = user["full_name"]
                         bot.reply_to(message,
-                                    f"Информация о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")                    
+                                    f"Информация о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
                 else:
                     if message.from_user.id == FOUNDER_ID:
                         user, is_reply = if_reply_to_message(message, user_id)
                         if user:
                             full_name = user["full_name"]
                             bot.reply_to(message,
-                                        f"Инфа о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}", parse_mode="MARKDOWNV2")
+                                        f"Инфа о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
                     bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
                     return
         except:
@@ -224,6 +224,20 @@ def kalik(message):
         except Exception as e:
             bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, в группу 12345678 group_name". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
             traceback.print_exc()
+    elif "о группе" in message.text.lower():
+        # Пытаемся узнать всех участников группы
+        # Пока тестово, без проверки на права
+        group_name = parts[3]
+        users = db.get_all_users()
+        message_to_reply = f"Все студенты группы {group_name}:\n"
+        a = 0
+        for i in users:
+            if i["group"] == group_name:
+                a += 1
+                url = get_url_from_id(i["full_name"], i["telegram_id"])
+                message_to_reply += f"{a}. {url}\n"
+        bot.reply_to(message, message_to_reply)
+        
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 

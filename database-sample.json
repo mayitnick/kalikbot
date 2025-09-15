@@ -3,10 +3,23 @@
         {
             "telegram_id": 1408266288,
             "telegram_username": "MayITNick",
-            "first_name": "Арсений",
-            "last_name": "Белокуров",
+            "full_name": "Арсений Белокуров",
             "type": "student",
-            "group": "IS-12-25",
+            "group": "IS-11-25",
+            "age": 16,
+            "duty_info": {
+                "last_duty": "2023-05-12",
+                "amount_of_duties": 3,
+                "pair_id": 5201965668,
+                "preferences": ["2023-05-12", "понедельник"]
+            }
+        },
+        {
+            "telegram_id": 5394040138,
+            "telegram_username": "MayITNick",
+            "full_name": "Эльмира",
+            "type": "student",
+            "group": "IS-11-25",
             "age": 16,
             "duty_info": {
                 "last_duty": "2023-05-12",
@@ -18,19 +31,30 @@
         {
             "telegram_id": 6862396551,
             "telegram_username": "Nastianic",
-            "first_name": "Анастасия",
-            "last_name": "Игоревна",
+            "full_name": "Анастасия Игоревна",
             "type": "curator",
-            "group": "IS-12-25",
-            "age": 16
+            "group": "IS-11-25",
+            "age": 16,
+            "duty_info": null
         },
         
         {
             "telegram_id": 5905710656,
             "telegram_username": "max",
-            "first_name": "Макс",
-            "last_name": "None",
-            "type": "guest"
+            "full_name": "Макс",
+            "type": "guest",
+            "group": null,
+            "age": null,
+            "duty_info": null
+        }
+    ],
+    "groups": [
+        {
+            "group": "IS-11-25",
+            "tg_group_id": 2492979822,
+            "curator": 6862396551,
+            "students": [1408266288],
+            "duty": []
         }
     ]
 }

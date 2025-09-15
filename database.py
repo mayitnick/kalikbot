@@ -124,4 +124,95 @@ class Database:
         self.save()
         print(f"Поле '{field}' пользователя {user.get('full_name', telegram_id)} изменено: {old_value} -> {value}")
         return user
-
+    
+    # Теперь сделаем работу с группами
+    # Подсказка структуры
+    """
+    "groups": [
+        {
+            "group": "IS-11-25",
+            "tg_group_id": 2492979822,
+            "curator": 6862396551,
+            "students": [1408266288],
+            "duty": []
+        }
+    ]
+    """
+    def create_group(self, group_name):
+        if group_name not in [group["group"] for group in self.data["groups"]]:
+            self.data["groups"].append({
+                "group": group_name,
+                "tg_group_id": None,
+                "curator": None,
+                "students": [],
+                "duty": []
+                })
+            self.save()
+            if self.data["groups"][-1]["group"] == group_name:
+                print(f"Группа {group_name} создана.")
+                return True
+            else:
+                print("Ошибка создания группы.")
+                return False
+        else:
+            if self.get_group_by_name(group_name)["tg_group_id"] is None:
+                print(f"Группа {group_name} уже существует, но не привязана к Telegram.")
+                return False
+            else:
+                print(f"Группа {group_name} уже существует и привязана к Telegram.")
+                return True
+    def get_group_by_name(self, group_name):
+        for group in self.data["groups"]:
+            if group["group"] == group_name:
+                return group
+        return None
+    def get_group_by_id(self, group_id):
+        for group in self.data["groups"]:
+            if group["tg_group_id"] == group_id:
+                return group
+        return None
+    def get_group_by_curator(self, curator_id):
+        for group in self.data["groups"]:
+            if group["curator"] == curator_id:
+                return group
+        return None
+    def set_curator(self, group_name, curator_id):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            if group["curator"] is None:
+                group["curator"] = curator_id
+                self.save()
+                print(f"Куратор для группы {group_name} установлен.")
+                return True
+            else:
+                if group["curator"] == curator_id:
+                    print(f"Куратор для группы {group_name} уже установлен.")
+                    return True
+                else:
+                    print(f"Куратор для группы {group_name} уже установлен.")
+                    return False
+    def set_duty(self, group_name, duty):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            group["duty"] = duty
+            self.save()
+            print(f"Дежурные для группы {group_name} установлены.")
+            return True
+    def add_student(self, group_name, student_id):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            if student_id not in group["students"]:
+                group["students"].append(student_id)
+                # Дополнительно обновляем группу в студенте
+                self.update_user_field(student_id, "group", group_name)
+                
+                self.save()
+                print(f"Студент {student_id} добавлен в группу {group_name}.")
+                return True
+    def set_tg_group_id(self, group_name, tg_group_id):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            group["tg_group_id"] = tg_group_id
+            self.save()
+            print(f"Telegram ID группы {group_name} установлен.")
+            return True

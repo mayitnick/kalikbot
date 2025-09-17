@@ -14,9 +14,12 @@
 # Импортируем необходимые библиотеки
 from telebot import types, TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from dotenv import load_dotenv
-import modules.constants as constants
+import modules.gloris_integration as gloris
 import modules.permissions as permissions
+import modules.constants as constants
+from dotenv import load_dotenv
+from datetime import datetime
+from datetime import timedelta
 import traceback
 import database
 import random
@@ -290,12 +293,81 @@ def kalik(message):
                 for group in groups:
                     markup.add(InlineKeyboardButton(text=group["group"], callback_data=f"group.{group['group']}"))
                 bot.reply_to(message, "Выберите группу:", reply_markup=markup)
+    elif "тг группа" in message.text.lower():
+        # Калик, тг группа IS-11-25
+        # Устанавливаем tg_group_id у группы на то, где было отправлено это сообщение
+        if message.from_user.id == FOUNDER_ID:
+            group_name = parts[3]
+            group = db.get_group_by_name(group_name)
+            if group:
+                db.update_group_field(group_name, "tg_group_id", message.chat.id)
+                bot.reply_to(message, f"ТГ группа для группы {group_name} успешно установлена!")
+            else:
+                bot.reply_to(message, f"Группа {group_name} не найдена.")
+    elif "расписание" in message.text.lower():
+        # Калик, расписание ИС-11-25
+        # Или просто Калик, расписание
+        
+        # Ещё проблема, что для gloris.get_schedule нужно указать день от 1 до 7, и это нужно определить по сегодняшнем дне недели
+        date = datetime.weekday(datetime.now()) + 1 # Потому что datetime.weekday возвращает 0 для понедельника, а не 1
+        if "сегодня" in message.text.lower():
+            date = datetime.weekday(datetime.now()) + 1
+        if "завтра" in message.text.lower():
+            date = datetime.weekday(datetime.now() + timedelta(days=1)) + 1
+        # так же пытаемся понимать типо "понедельник", "вторник" и т.д.
+        if "понедельник" in message.text.lower():
+            date = 1
+        elif "вторник" in message.text.lower():
+            date = 2
+        elif "сред" in message.text.lower():
+            date = 3
+        elif "четверг" in message.text.lower():
+            date = 4
+        elif "пятниц" in message.text.lower():
+            date = 5
+        elif "суббот" in message.text.lower():
+            bot.reply_to(message, "В субботу мы не учимся :3")
+        elif "воскресенье" in message.text.lower():
+            bot.reply_to(message, "В воскресенье мы не учимся :3")
+        
+        if len(parts) >= 3:
+            try:
+                group_id = gloris.name_to_id(parts[2]) # сюда пишем ИС-11-25
+                schedule = gloris.get_schedule(date, group_id)
+                if schedule:
+                    bot.reply_to(message, "Расписание:\n" + "\n".join(schedule))
+                else:
+                    bot.reply_to(message, "Расписание не было найдено. Проверьте правильность написания группы.")
+            except Exception as e:
+                traceback.print_exc()
+                bot.reply_to(message, "Что-то пошло не так. Попробуйте ещё раз.")
+        else:
+            # Пытаемся получить айди группы из БД
+            chat_id = message.chat.id
+            group = db.get_group_by_tg_group_id(chat_id)
+            if group:
+                try:
+                    group_id = group["gloris_id"]
+                    schedule = gloris.get_schedule(date, group_id)
+                    if schedule:
+                        bot.reply_to(message, "Расписание:\n" + "\n".join(schedule))
+                    else:
+                        bot.reply_to(message, "Расписание не было найдено. Проверьте правильность написания группы.")
+                except Exception as e:
+                    traceback.print_exc()
+                    bot.reply_to(message, "Что-то пошло не так. Попробуйте ещё раз.")
+            else:
+                bot.reply_to(message, "К сожалению, у вас не установлена ТГ группа. ")
+            
+            
     elif "помощь" in message.text.lower():
         bot.reply_to(message, "чем помочь? могу только тем, что есть в доках https://vaylorm.github.io/kalikbot-docs/")
     elif "создал" in message.text.lower():
         bot.reply_to(message, "Меня создал величайший VayLorm! Он же @MayITNick. Он меня наделил всеми теми репликами, которыми я обнимаю вас каждый день!\nВ общем, топ челик!")
     elif "пасхалка" in message.text.lower():
         bot.reply_to(message, "Всегда отдавай честь брату инженера!")
+    elif "заполнитель" in message.text.lower():
+        bot.reply_to(message, ".\n" * 30)
     else:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
 

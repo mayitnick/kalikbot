@@ -143,6 +143,7 @@ class Database:
             self.data["groups"].append({
                 "group": group_name,
                 "tg_group_id": None,
+                "gloris_id": None,
                 "curator": None,
                 "students": [],
                 "duty": []
@@ -224,5 +225,17 @@ class Database:
                 self.save()
                 print(f"Студент {student_id} удален из группы {group_name}.")
                 return True
+    def update_group_field(self, group_name, field, value):
+        if group_name in [group["group"] for group in self.data["groups"]]:
+            group = self.get_group_by_name(group_name)
+            old_value = group.get(field, None)
+            group[field] = value
+            self.save()
+            print(f"Поле '{field}' группы {group_name} изменено: {old_value} -> {value}")
+            return group
+    def get_group_by_tg_group_id(self, tg_group_id):
+        for group in self.data["groups"]:
+            if group["tg_group_id"] == tg_group_id:
+                return group
     def get_all_groups(self):
         return self.data["groups"]

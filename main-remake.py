@@ -381,7 +381,7 @@ def kalik(message):
             else:
                 bot.reply_to(message, constants["tg_no_group"])
     # попробуем сделать обработчик для "Калик, когда закончится пара"
-    if "когда закончится пара" in message.text.lower():
+    elif "когда закончится пара" in message.text.lower():
         # 1. Берём времена пар
         schedule_times = db.get_schedule()
 

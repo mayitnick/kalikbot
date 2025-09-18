@@ -1,11 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 
+headers = {
+    "User-Agent": "KalikBotOKTU/1.0",
+    "X-Requested-By": "MayITNick (mayitnick@inbox.ru) (github.com/mayitnick/kalikbot)",
+}
+
 def get_schedule(day: int, group_id: int):
     url = f"https://глорис-окту-3.рф/lesson_table_show/?day={day}&group_id={group_id}"
     # Для того, чтобы получить все группы: url = f"https://глорис-окту-3.рф/lesson_table_show/?day={day}"
     print(url)
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
     response.encoding = 'utf-8'
     
     soup = BeautifulSoup(response.text, 'html.parser')

@@ -68,5 +68,5 @@
 ---
 
 ## ✨ Автор
-👨‍💻 Разработано с заботой студентом-энтузиастом — [MayITNick](https://github.com/VayLorm).
+👨‍💻 Разработано с заботой студентом-энтузиастом — [MayITNick](https://github.com/MayITNick).
 

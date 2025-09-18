@@ -304,7 +304,7 @@ def kalik(message):
                 bot.reply_to(message, f"ТГ группа для группы {group_name} успешно установлена!")
             else:
                 bot.reply_to(message, f"Группа {group_name} не найдена.")
-    elif "расписание" in message.text.lower():
+    elif "распис" in message.text.lower():
         # Калик, расписание ИС-11-25
         # Или просто Калик, расписание
         
@@ -335,7 +335,7 @@ def kalik(message):
                 group_id = gloris.name_to_id(parts[2]) # сюда пишем ИС-11-25
                 schedule = gloris.get_schedule(date, group_id)
                 if schedule:
-                    bot.reply_to(message, "Расписание:\n" + "\n".join(schedule))
+                    bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
                 else:
                     bot.reply_to(message, "Расписание не было найдено. Проверьте правильность написания группы.")
             except Exception as e:

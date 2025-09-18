@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 
 def get_schedule(day: int, group_id: int):
     url = f"https://глорис-окту-3.рф/lesson_table_show/?day={day}&group_id={group_id}"
+    # Для того, чтобы получить все группы: url = f"https://глорис-окту-3.рф/lesson_table_show/?day={day}"
     print(url)
     response = requests.get(url)
     response.encoding = 'utf-8'
@@ -17,7 +18,7 @@ def get_schedule(day: int, group_id: int):
 
 def main():
     day = int(input("Введите номер дня недели (1-пн, 2-вт, ...): "))
-    group_id = int(input("Введите номер группы: "))
+    group_id = name_to_id(input("Введите название группы: "))
     
     lessons = get_schedule(day, group_id)
     if not lessons:

@@ -346,10 +346,10 @@ def kalik(message):
         elif "пятниц" in message.text.lower():
             date = 5
         elif "суббот" in message.text.lower():
-            bot.reply_to(message, constants["no_saturday"])
+            bot.reply_to(message, CONSTANTS["no_saturday"])
             return
         elif "воскресенье" in message.text.lower():
-            bot.reply_to(message, constants["no_sunday"])
+            bot.reply_to(message, CONSTANTS["no_sunday"])
             return
         
         if len(parts) >= 3:
@@ -359,10 +359,10 @@ def kalik(message):
                 if schedule:
                     bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
                 else:
-                    bot.reply_to(message, constants["schedule_not_found"])
+                    bot.reply_to(message, CONSTANTS["schedule_not_found"])
             except Exception as e:
                 traceback.print_exc()
-                bot.reply_to(message, constants['error'])
+                bot.reply_to(message, CONSTANTS['error'])
         else:
             # Пытаемся получить айди группы из БД
             chat_id = message.chat.id
@@ -374,12 +374,12 @@ def kalik(message):
                     if schedule:
                         bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
                     else:
-                        bot.reply_to(message, constants["schedule_not_found"])
+                        bot.reply_to(message, CONSTANTS["schedule_not_found"])
                 except Exception as e:
                     traceback.print_exc()
-                    bot.reply_to(message, constants['error'])
+                    bot.reply_to(message, CONSTANTS['error'])
             else:
-                bot.reply_to(message, constants["tg_no_group"])
+                bot.reply_to(message, CONSTANTS["tg_no_group"])
     # попробуем сделать обработчик для "Калик, когда закончится пара"
     elif "когда закончится пара" in message.text.lower():
         # 1. Берём времена пар
@@ -392,7 +392,7 @@ def kalik(message):
         chat_id = message.chat.id
         group = db.get_group_by_tg_group_id(chat_id)
         if not group:
-            bot.reply_to(message, constants["tg_no_group"])
+            bot.reply_to(message, CONSTANTS["tg_no_group"])
             return
 
         group_id = group["gloris_id"]
@@ -406,7 +406,7 @@ def kalik(message):
                 subject = lessons[pair_num - 1]
                 bot.reply_to(
                     message,
-                    constants["when_pair_end"].format(pair_num, subject, remaining)
+                    CONSTANTS["when_pair_end"].format(pair_num, subject, remaining)
                 )
             else:
                 bot.reply_to(message, f"Сейчас идёт {pair_num}-я пара, но в расписании её нет 🤔")

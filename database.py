@@ -15,7 +15,7 @@ class Database:
                     self.data = json.load(file)
                     if "students" not in self.data:
                         # если старая структура — пересоздать
-                        self.data = {"students": [], "groups": []}
+                        self.data = {"students": [], "groups": [], "schedule": []}
             except json.JSONDecodeError:
                 print("Ошибка JSON. Создаю новую базу.")
                 self.data = {"students": []}
@@ -239,3 +239,9 @@ class Database:
                 return group
     def get_all_groups(self):
         return self.data["groups"]
+    def get_schedule(self):
+        if self.data["schedule"]:
+            return self.data["schedule"]
+        else:
+            print("Расписание не найдено.")
+            return None

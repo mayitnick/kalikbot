@@ -10,74 +10,78 @@ import traceback
 
 ALIASES = ["распис"]
 
-def handle(
-    message: Message,
-    bot: TeleBot,
-    db: database.Database,
-    perm: permissions.Permissions,
-    CONSTANTS: CONSTANTS,
-    FOUNDER_ID: int,
-) -> None:
-    parts = message.text.split()
-    # Калик, расписание ИС-11-25
-    # Или просто Калик, расписание
-    
-    # Ещё проблема, что для gloris.get_schedule нужно указать день от 1 до 7, и это нужно определить по сегодняшнем дне недели
-    date = datetime.weekday(datetime.now()) + 1 # Потому что datetime.weekday возвращает 0 для понедельника, а не 1
-    if "сегодня" in message.text.lower():
-        date = datetime.weekday(datetime.now()) + 1
-    if "завтра" in message.text.lower():
-        date = datetime.weekday(datetime.now() + timedelta(days=1)) + 1
-    # так же пытаемся понимать типо "понедельник", "вторник" и т.д.
-    if "понедельник" in message.text.lower():
-        date = 1
-    elif "вторник" in message.text.lower():
-        date = 2
-    elif "сред" in message.text.lower():
-        date = 3
-    elif "четверг" in message.text.lower():
-        date = 4
-    elif "пятниц" in message.text.lower():
-        date = 5
-    elif "суббот" in message.text.lower():
-        bot.reply_to(message, CONSTANTS.no_saturday)
-        return
-    elif "воскресенье" in message.text.lower():
-        bot.reply_to(message, CONSTANTS.no_sunday)
-        return
-    
-    if len(parts) >= 3:
-        try:
-            group_id = gloris.name_to_id(parts[2]) # сюда пишем ИС-11-25
-            schedule = gloris.get_schedule(date, group_id)
-            if schedule:
-                bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
-                return
-            else:
-                bot.reply_to(message, CONSTANTS.schedule_not_found + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
-                return
-        except Exception as e:
-            traceback.print_exc()
-            bot.reply_to(message, CONSTANTS.error + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
-            return
-    else:
-        # Пытаемся получить айди группы из БД
+SERVICE_WORDS = {"на", "по", "в", "для"}
+DAY_ALIASES = {
+    1: ["пн", "пон", "понед", "понедельник"],
+    2: ["вт", "вторник"],
+    3: ["ср", "среда", "сред"],
+    4: ["чт", "четверг"],
+    5: ["пт", "пятница", "пятн"],
+    6: ["сб", "суббота", "суббот"],
+    7: ["вс", "воскресенье", "воскрес"]
+}
+DAYS_MAP = {k: v[0].capitalize() for k, v in DAY_ALIASES.items()}  # Для заголовка
+
+def parse_day(text: str) -> int | None:
+    text = text.lower()
+    if "сегодня" in text:
+        return datetime.weekday(datetime.now()) + 1
+    if "завтра" in text:
+        return datetime.weekday(datetime.now() + timedelta(days=1)) + 1
+    for day_num, variants in DAY_ALIASES.items():
+        if any(v in text for v in variants):
+            return day_num
+    return None
+
+def parse_group(parts: list[str]) -> str | None:
+    for p in parts:
+        if "-" in p or p.isalnum():
+            try:
+                return gloris.name_to_id(p.upper())
+            except Exception:
+                continue
+    return None
+
+def handle(message: Message, bot: TeleBot, db: database.Database,
+           perm: permissions.Permissions, CONSTANTS: CONSTANTS, FOUNDER_ID: int):
+
+    text = message.text.lower()
+    parts = [p for p in text.split() if p not in SERVICE_WORDS]
+
+    day = parse_day(text)
+
+    # Если день не указан → сегодня или понедельник (выходные)
+    if not day:
+        day = datetime.weekday(datetime.now()) + 1
+        if day >= 6:  # Суббота или воскресенье
+            day = 1
+
+    day_name = DAYS_MAP.get(day, "Неизвестный день")
+
+    # Ищем группу среди оставшихся слов
+    group_id = parse_group(parts)
+
+    # Если группа не указана, пробуем взять из БД
+    if not group_id:
         chat_id = message.chat.id
         group = db.get_group_by_tg_group_id(chat_id)
         if group:
-            try:
-                group_id = group["gloris_id"]
-                schedule = gloris.get_schedule(date, group_id)
-                if schedule:
-                    bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
-                    return
-                else:
-                    bot.reply_to(message, CONSTANTS.schedule_not_found)
-                    return
-            except Exception as e:
-                traceback.print_exc()
-                bot.reply_to(message, CONSTANTS.error + " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
-                return
+            group_id = group["gloris_id"]
         else:
-            bot.reply_to(message, CONSTANTS.tg_no_group + " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+            bot.reply_to(message, CONSTANTS.tg_no_group + 
+                         " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
             return
+
+    # Получаем расписание
+    try:
+        schedule = gloris.get_schedule(day, group_id)
+        if schedule:
+            bot.reply_to(message,
+                         f"<b>Расписание на {day_name}:</b>\n" + "\n".join(schedule),
+                         parse_mode="HTML")
+        else:
+            bot.reply_to(message, CONSTANTS.schedule_not_found)
+    except Exception:
+        traceback.print_exc()
+        bot.reply_to(message, CONSTANTS.error +
+                     " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")

@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 import modules.permissions as permissions
+from modules.constants import CONSTANTS
 import database
 from typing import Any, Dict
 import random
@@ -14,7 +15,7 @@ def handle(
     bot: TeleBot,
     db: database.Database,
     perm: permissions.Permissions,
-    CONSTANTS: Dict[str, Any],
+    CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,) -> bool:
     
     text = message.text.lower().strip()

@@ -1,4 +1,3 @@
-# commands/ping.py
 import time
 
 ALIASES = ["пинг", "понг"]

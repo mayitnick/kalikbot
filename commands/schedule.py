@@ -1,6 +1,7 @@
 from telebot import TeleBot
 from telebot.types import Message
 import modules.permissions as permissions
+from modules.constants import CONSTANTS
 import database
 from typing import Any, Dict
 from datetime import datetime, timedelta
@@ -14,7 +15,7 @@ def handle(
     bot: TeleBot,
     db: database.Database,
     perm: permissions.Permissions,
-    CONSTANTS: Dict[str, Any],
+    CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,
 ) -> None:
     parts = message.text.split()
@@ -39,10 +40,10 @@ def handle(
     elif "пятниц" in message.text.lower():
         date = 5
     elif "суббот" in message.text.lower():
-        bot.reply_to(message, CONSTANTS["no_saturday"])
+        bot.reply_to(message, CONSTANTS.no_saturday)
         return
     elif "воскресенье" in message.text.lower():
-        bot.reply_to(message, CONSTANTS["no_sunday"])
+        bot.reply_to(message, CONSTANTS.no_sunday)
         return
     
     if len(parts) >= 3:
@@ -51,11 +52,14 @@ def handle(
             schedule = gloris.get_schedule(date, group_id)
             if schedule:
                 bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
+                return
             else:
-                bot.reply_to(message, CONSTANTS["schedule_not_found"])
+                bot.reply_to(message, CONSTANTS.schedule_not_found + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+                return
         except Exception as e:
             traceback.print_exc()
-            bot.reply_to(message, CONSTANTS['error'])
+            bot.reply_to(message, CONSTANTS.error + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+            return
     else:
         # Пытаемся получить айди группы из БД
         chat_id = message.chat.id
@@ -66,10 +70,14 @@ def handle(
                 schedule = gloris.get_schedule(date, group_id)
                 if schedule:
                     bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
+                    return
                 else:
-                    bot.reply_to(message, CONSTANTS["schedule_not_found"])
+                    bot.reply_to(message, CONSTANTS.schedule_not_found + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+                    return
             except Exception as e:
                 traceback.print_exc()
-                bot.reply_to(message, CONSTANTS['error'])
+                bot.reply_to(message, CONSTANTS.error + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+                return
         else:
-            bot.reply_to(message, CONSTANTS["tg_no_group"])
+            bot.reply_to(message, CONSTANTS.tg_no_group + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+            return

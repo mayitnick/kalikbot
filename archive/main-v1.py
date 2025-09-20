@@ -112,13 +112,13 @@ def kalik(message):
     
     if is_only_kalik:
         bot.reply_to(message, random.choice(CONSTANTS["kalik_answers"]))
-    elif "пинг" in message.text.lower():
+    elif "пинг" in message.text.lower(): # ПЕРЕНЕСЕНО ------------------
         start = time.time()
         sent_msg = bot.send_message(message.chat.id, 'Пингую...')
         end = time.time()
         ping_ms = int((end - start) * 1000)
         bot.edit_message_text(f'Мой пинг: {ping_ms} мс. Хорошо считаю, правда? :3', chat_id=message.chat.id, message_id=sent_msg.message_id)
-    elif "айди" in message.text.lower():
+    elif "айди" in message.text.lower(): # ПЕРЕНЕСЕНО ------------------
         # Узнаём айди по реплаю
         # А так же, пытаемся узнать по упоминанию
         # Третий аргумент - упоминание

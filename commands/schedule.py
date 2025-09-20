@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 import traceback
 
-ALIASES = ["айди", "id"]
+ALIASES = ["распис"]
 
 def handle(
     message: Message,

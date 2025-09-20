@@ -4,8 +4,9 @@ import modules.permissions as permissions
 import database
 from typing import Any, Dict
 import datetime
-from modules.gloris_integration import gloris
+import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
+
 def get_current_pair(schedule_times):
     """
     schedule_times = ["8:20-9:50", "10:00-11:30", ...]

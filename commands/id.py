@@ -3,7 +3,6 @@ from telebot.types import Message
 import modules.permissions as permissions
 from modules.constants import CONSTANTS
 import database
-from typing import Any, Dict
 
 ALIASES = ["айди", "id"]
 

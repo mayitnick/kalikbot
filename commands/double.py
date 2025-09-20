@@ -2,7 +2,6 @@ from telebot import TeleBot
 from telebot.types import Message
 import modules.permissions as permissions
 import database
-from typing import Any, Dict
 from datetime import datetime
 import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS

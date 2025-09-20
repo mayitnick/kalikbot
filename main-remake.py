@@ -98,6 +98,35 @@ def start(message):
 def ping_command(message):
     bot.reply_to(message, "🏓 Поньг~")
 
+@bot.message_handler(commands=['check'])
+def check_admin_rights(message):
+    # Получаем информацию о боте как о члене чата
+    chat_id = message.chat.id
+    bot_user_id = bot.get_me().id  # ID самого бота
+    chat_member = bot.get_chat_member(chat_id, bot_user_id)
+    
+    # Проверяем статус и права
+    if chat_member.status == 'administrator':
+        rights = []
+        if chat_member.can_post_messages:
+            rights.append('Может публиковать сообщения')
+        if chat_member.can_edit_messages:
+            rights.append('Может редактировать сообщения')
+        if chat_member.can_delete_messages:
+            rights.append('Может удалять сообщения')
+        if chat_member.can_invite_users:
+            rights.append('Может приглашать пользователей')
+        if chat_member.can_restrict_members:
+            rights.append('Может ограничивать участников')
+        if chat_member.can_pin_messages:
+            rights.append('Может закреплять сообщения')
+        if chat_member.can_promote_members:
+            rights.append('Может назначать админов')
+        print("Права:" + "\n".join(rights))
+    else:
+        print("Походу, у бота нет прав администратора в этом чате.")
+    bot.send_message(chat_id, "Я проверил все модули, и вывел в консоль :)")
+
 # Сделаем обработчик для всех сообщений
 @bot.message_handler(func=lambda message: True)
 def message_listener(message):

@@ -7,7 +7,7 @@ from typing import Any, Dict
 import random
 import re
 
-ALIASES = ["here"]
+ALIASES = ["тут"]
 
 def handle(
     message: Message,

@@ -3,7 +3,7 @@ from telebot.types import Message
 import modules.permissions as permissions
 import database
 from typing import Any, Dict
-import datetime
+from datetime import datetime
 import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
 
@@ -27,7 +27,7 @@ def get_current_pair(schedule_times):
 
     return None, None
 
-ALIASES = ["айди", "id"]
+ALIASES = ["пара"]
 
 def handle(
     message: Message,

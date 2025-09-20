@@ -72,12 +72,12 @@ def handle(
                     bot.reply_to(message, "<b>Расписание:</b>\n" + "\n".join(schedule), parse_mode="HTML")
                     return
                 else:
-                    bot.reply_to(message, CONSTANTS.schedule_not_found + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+                    bot.reply_to(message, CONSTANTS.schedule_not_found)
                     return
             except Exception as e:
                 traceback.print_exc()
-                bot.reply_to(message, CONSTANTS.error + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+                bot.reply_to(message, CONSTANTS.error + " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
                 return
         else:
-            bot.reply_to(message, CONSTANTS.tg_no_group + "Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+            bot.reply_to(message, CONSTANTS.tg_no_group + " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
             return

@@ -82,6 +82,10 @@ def start(message):
         markup.add(button1)
         bot.reply_to(message, "Привет! Я Калик, и мой функционал раскрывается только в группе!", reply_markup=markup)
 
+@bot.message_handler(commands=['ping'])
+def ping_command(message):
+    bot.reply_to(message, "🏓 Поньг~")
+
 # Сделаем обработчик для всех сообщений
 @bot.message_handler(func=lambda message: True)
 def message_listener(message):
@@ -406,7 +410,7 @@ def kalik(message):
                 subject = lessons[pair_num - 1]
                 bot.reply_to(
                     message,
-                    CONSTANTS["when_pair_end"].format(pair_num, subject, remaining)
+                    f"Сейчас идёт {pair_num}-я пара ({subject}), она закончится через {remaining} минут 🕒~ потерпи немножко >w<"
                 )
             else:
                 bot.reply_to(message, f"Сейчас идёт {pair_num}-я пара, но в расписании её нет 🤔")
@@ -435,4 +439,10 @@ def callback_inline(call):
 
 me = bot.get_me()
 print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")
-bot.infinity_polling()
+try:
+    bot.infinity_polling()
+except requests.exceptions.ConnectionError:
+    print("🌐 Ой, интернет потерялся... ищем снова 🦊")
+except Exception as e:
+    # на всякий случай ловим всё остальное
+    print(f"⚠ Неожиданная ошибка: {e}")

@@ -1,3 +1,4 @@
 pyTelegramBotAPI
 python-dotenv
 Pillow
+beautifulsoup4

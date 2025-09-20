@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Таймлайн коммитов</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  .container {
+    width: 95vw;
+    height: 95vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 100px 1fr 180px;
+    gap: 8px 16px;
+    align-items: center;
+  }
+  .commit {
+    background: #e9f0ff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    cursor: default;
+    font-size: clamp(10px, 1vw + 1vh, 14px);
+    line-height: 1.3;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .commit:hover {
+    background: #c2d8ff;
+  }
+  .date {
+    font-weight: 700;
+    color: #1a73e8;
+    text-align: right;
+    font-size: clamp(10px, 1vw + 1vh, 14px);
+    white-space: nowrap;
+  }
+  .message {
+    font-weight: 600;
+    color: #202124;
+  }
+  .author {
+    font-style: italic;
+    color: #5f6368;
+    font-size: clamp(9px, 0.9vw + 0.8vh, 12px);
+    white-space: nowrap;
+  }
+  @media (max-width: 700px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+    .date, .author {
+      text-align: left;
+      white-space: normal;
+    }
+    .commit {
+      white-space: normal;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Немного подчищены команды, так же добавлена команда &quot;разделитель&quot;">Немного подчищены команды, так же добавлена команда &quot;разделитель&quot;</div>
+    <div class="author" title="VayLorm">VayLorm (<code>21b6cc8</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="изменение логики расписания">изменение логики расписания</div>
+    <div class="author" title="VayLorm">VayLorm (<code>079f88d</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Изменения пасхалки, и улучшение логики double">Изменения пасхалки, и улучшение логики double</div>
+    <div class="author" title="VayLorm">VayLorm (<code>5c37354</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="хотфикс автора">хотфикс автора</div>
+    <div class="author" title="VayLorm">VayLorm (<code>93745da</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="хотфикс cando">хотфикс cando</div>
+    <div class="author" title="VayLorm">VayLorm (<code>e03b168</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Пару хотфиксов">Пару хотфиксов</div>
+    <div class="author" title="VayLorm">VayLorm (<code>2b72244</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="хотфикс">хотфикс</div>
+    <div class="author" title="VayLorm">VayLorm (<code>43d5ce1</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Перенесено море кода, из лапше кода в нормальные модули">Перенесено море кода, из лапше кода в нормальные модули</div>
+    <div class="author" title="VayLorm">VayLorm (<code>97f8db5</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Конвертация лапшакода в нормальные модули">Конвертация лапшакода в нормальные модули</div>
+    <div class="author" title="VayLorm">VayLorm (<code>42f1b0e</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Добавили команду распис">Добавили команду распис</div>
+    <div class="author" title="VayLorm">VayLorm (<code>8189f07</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="изменение readme">изменение readme</div>
+    <div class="author" title="VayLorm">VayLorm (<code>cc45658</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="изменили картинку для тестов :3">изменили картинку для тестов :3</div>
+    <div class="author" title="VayLorm">VayLorm (<code>c421ba7</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="Начало перевода из лапша-кода в читабельную структуру + тесты с readme.md">Начало перевода из лапша-кода в читабельную структуру + тесты с readme.md</div>
+    <div class="author" title="VayLorm">VayLorm (<code>b59e9cb</code>)</div>
+    
+    <div class="date">2025-09-20</div>
+    <div class="commit message" title="пару хотфиксов">пару хотфиксов</div>
+    <div class="author" title="VayLorm">VayLorm (<code>802eeb6</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="ещё один хотфикс">ещё один хотфикс</div>
+    <div class="author" title="VayLorm">VayLorm (<code>f9c4027</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="хотфикс условия">хотфикс условия</div>
+    <div class="author" title="VayLorm">VayLorm (<code>ebd04a8</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="Добавление функции &quot;когда закончится пара&quot;, пару фраз вынесено (в будущем все реплики бота будут в constants.py). Также обновлены реплики.">Добавление функции &quot;когда закончится пара&quot;, пару фраз вынесено (в будущем все реплики бота будут в constants.py). Также обновлены реплики.</div>
+    <div class="author" title="VayLorm">VayLorm (<code>849cdb4</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="Пару исправлений">Пару исправлений</div>
+    <div class="author" title="VayLorm">VayLorm (<code>45481dd</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="Собираем все предметы чтобы в будущем интегрировать">Собираем все предметы чтобы в будущем интегрировать</div>
+    <div class="author" title="VayLorm">VayLorm (<code>35a5386</code>)</div>
+    
+    <div class="date">2025-09-18</div>
+    <div class="commit message" title="Добавление немного больше интеграции с глорисом">Добавление немного больше интеграции с глорисом</div>
+    <div class="author" title="VayLorm">VayLorm (<code>e6acf7d</code>)</div>
+    
+    <div class="date">2025-09-17</div>
+    <div class="commit message" title="Интеграция с глорис">Интеграция с глорис</div>
+    <div class="author" title="VayLorm">VayLorm (<code>b0b8461</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Система групп, больше функционала со стороны команд">Система групп, больше функционала со стороны команд</div>
+    <div class="author" title="VayLorm">VayLorm (<code>0211802</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Merge branch &#x27;main&#x27; of https://github.com/VayLorm/kalikbot">Merge branch &#x27;main&#x27; of https://github.com/VayLorm/kalikbot</div>
+    <div class="author" title="VayLorm">VayLorm (<code>64ecb8c</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="+ кучу новых функций в ДБ">+ кучу новых функций в ДБ</div>
+    <div class="author" title="VayLorm">VayLorm (<code>4ad8d20</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Пару команд новых">Пару команд новых</div>
+    <div class="author" title="VayLorm">VayLorm (<code>c172001</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Чуть поменял команду «Калик, что ты умеешь» на кастомную доку)">Чуть поменял команду «Калик, что ты умеешь» на кастомную доку)</div>
+    <div class="author" title="VayLorm">VayLorm (<code>2574767</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Merge branch &#x27;main&#x27; of https://github.com/VayLorm/collegebot">Merge branch &#x27;main&#x27; of https://github.com/VayLorm/collegebot</div>
+    <div class="author" title="VayLorm">VayLorm (<code>b4366fd</code>)</div>
+    
+    <div class="date">2025-09-15</div>
+    <div class="commit message" title="Сохранение локальных изменений перед pull">Сохранение локальных изменений перед pull</div>
+    <div class="author" title="VayLorm">VayLorm (<code>b1f2e53</code>)</div>
+    
+    <div class="date">2025-09-14</div>
+    <div class="commit message" title="Новый модуль для генерации изображений групп, немного фиксов">Новый модуль для генерации изображений групп, немного фиксов</div>
+    <div class="author" title="VayLorm">VayLorm (<code>ffe99e2</code>)</div>
+    
+    <div class="date">2025-09-13</div>
+    <div class="commit message" title="Добавления команды &quot;в группу&quot; (пока без тестов)">Добавления команды &quot;в группу&quot; (пока без тестов)</div>
+    <div class="author" title="VayLorm">VayLorm (<code>cfd6bd8</code>)</div>
+    
+    <div class="date">2025-09-13</div>
+    <div class="commit message" title="Теперь к Калику можно обращатся не только по &quot;Калик&quot;, и ещё пару фиксов :3">Теперь к Калику можно обращатся не только по &quot;Калик&quot;, и ещё пару фиксов :3</div>
+    <div class="author" title="VayLorm">VayLorm (<code>ba93435</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Фикс Readme">Фикс Readme</div>
+    <div class="author" title="VayLorm">VayLorm (<code>ee94610</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Изменён Readme.md на мой, самописный (тестируемс) + фикси разрешений">Изменён Readme.md на мой, самописный (тестируемс) + фикси разрешений</div>
+    <div class="author" title="VayLorm">VayLorm (<code>a5f3d6e</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Добавлена система permissions. Теперь, каждый тип может добвлять определённых людей. Код с &quot;измени тип&quot; надо точно отрефакторить, но пока отложу.">Добавлена система permissions. Теперь, каждый тип может добвлять определённых людей. Код с &quot;измени тип&quot; надо точно отрефакторить, но пока отложу.</div>
+    <div class="author" title="VayLorm">VayLorm (<code>0065b9d</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Новые команды, динамичные ответы от Калика">Новые команды, динамичные ответы от Калика</div>
+    <div class="author" title="VayLorm">VayLorm (<code>5286e76</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Создал requirements.txt ;)">Создал requirements.txt ;)</div>
+    <div class="author" title="VayLorm">VayLorm (<code>77f0489</code>)</div>
+    
+    <div class="date">2025-09-11</div>
+    <div class="commit message" title="Update README.md">Update README.md</div>
+    <div class="author" title="VayLorm">VayLorm (<code>5eb028b</code>)</div>
+    
+    <div class="date">2025-09-10</div>
+    <div class="commit message" title="Новая DB, новый код, новое имя для бота, новое нахрен всё. Бот умеет определять айдишники, добавлять пользователей в DB и изменять им fullname в DB, и рофельно отвечать по позыву) Пока что всё.">Новая DB, новый код, новое имя для бота, новое нахрен всё. Бот умеет определять айдишники, добавлять пользователей в DB и изменять им fullname в DB, и рофельно отвечать по позыву) Пока что всё.</div>
+    <div class="author" title="VayLorm">VayLorm (<code>6e3562f</code>)</div>
+    
+    <div class="date">2025-09-09</div>
+    <div class="commit message" title="Пофикшена команда &quot;добавить его&quot;, изменена база данных для хранения username ботов">Пофикшена команда &quot;добавить его&quot;, изменена база данных для хранения username ботов</div>
+    <div class="author" title="VayLorm">VayLorm (<code>1ac0f36</code>)</div>
+    
+    <div class="date">2025-09-09</div>
+    <div class="commit message" title="Проанализированы требования для inline клавиатуры Изменена функция send_welcome для добавления inline клавиатуры Протестирована обновленная команда /start Добавлен обработчик callback для кнопок inline клавиатуры Изменена кнопка с использованием switch_inline_query Реализована обработка добавления бота в группу Исправлена функциональность кнопки для приглашения бота в группу Реализована нечувствительная к регистру и знакам препинания обработка команд Добавлена реализация команды &quot;джарвис, что ты умеешь&quot; Создан файл database.json Реализованы функции взаимодействия с базой данных в database.py Рефакторинг database.py — переведен на использование классов Улучшена команда &quot;джарвис, добавь его&quot; — теперь использует имя и фамилию из ручного сообщения при ответе">Проанализированы требования для inline клавиатуры Изменена функция send_welcome для добавления inline клавиатуры Протестирована обновленная команда /start Добавлен обработчик callback для кнопок inline клавиатуры Изменена кнопка с использованием switch_inline_query Реализована обработка добавления бота в группу Исправлена функциональность кнопки для приглашения бота в группу Реализована нечувствительная к регистру и знакам препинания обработка команд Добавлена реализация команды &quot;джарвис, что ты умеешь&quot; Создан файл database.json Реализованы функции взаимодействия с базой данных в database.py Рефакторинг database.py — переведен на использование классов Улучшена команда &quot;джарвис, добавь его&quot; — теперь использует имя и фамилию из ручного сообщения при ответе</div>
+    <div class="author" title="VayLorm">VayLorm (<code>374a008</code>)</div>
+    
+    <div class="date">2025-09-09</div>
+    <div class="commit message" title="Первый коммит">Первый коммит</div>
+    <div class="author" title="VayLorm">VayLorm (<code>91f5bd2</code>)</div>
+    
+    <div class="date">2025-09-09</div>
+    <div class="commit message" title="Initial commit">Initial commit</div>
+    <div class="author" title="VayLorm">VayLorm (<code>b457da5</code>)</div>
+    
+</div>
+</body>
+</html>

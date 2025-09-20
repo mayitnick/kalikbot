@@ -41,7 +41,7 @@ load_dotenv()
 
 db = database.Database()
 perm = permissions.Permissions()
-CONSTANTS = constants.CONSTANTS
+CONSTANTS = constants.CONSTANTS()
 bot = TeleBot(os.getenv('TOKEN'))
 
 FOUNDER_ID = int(os.getenv('FOUNDER_ID'))
@@ -115,12 +115,20 @@ def message_listener(message):
     
 def kalik(message):
     text = message.text.lower()
+
+    # 1. Сначала проверяем чистый зов
+    from commands import call
+    if call.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID):
+        return
+
+    # 2. Потом остальные команды
     for cmd in COMMANDS:
         if any(alias in text for alias in getattr(cmd, "ALIASES", [])):
             cmd.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
             return
-    # если ничего не подошло
-    bot.reply_to(message, random.choice(CONSTANTS["kalik_dontknow"]))
+
+    # 3. Если ничего не подошло
+    bot.reply_to(message, random.choice(CONSTANTS.dont_know))
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):

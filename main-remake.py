@@ -17,6 +17,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import modules.gloris_integration as gloris
 import modules.permissions as permissions
 import modules.constants as constants
+from badwords import ProfanityFilter
 from dotenv import load_dotenv
 from datetime import datetime
 from datetime import timedelta
@@ -43,6 +44,8 @@ db = database.Database()
 perm = permissions.Permissions()
 CONSTANTS = constants.CONSTANTS()
 bot = TeleBot(os.getenv('TOKEN'))
+p = ProfanityFilter()
+p.init(["ru"])
 
 FOUNDER_ID = int(os.getenv('FOUNDER_ID'))
 
@@ -144,7 +147,12 @@ def message_listener(message):
     
 def kalik(message):
     text = message.text.lower()
-
+    
+    contains_profanity = p.filter_text(text, match_threshold=0.9)
+    if contains_profanity:
+        bot.reply_to(message, "Я не люблю маты! 😡")
+        return
+    
     # 1. Сначала проверяем чистый зов
     from commands import call
     if call.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID):

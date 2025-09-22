@@ -17,7 +17,6 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import modules.gloris_integration as gloris
 import modules.permissions as permissions
 import modules.constants as constants
-from badwords import ProfanityFilter
 from dotenv import load_dotenv
 from datetime import datetime
 from datetime import timedelta
@@ -44,8 +43,7 @@ db = database.Database()
 perm = permissions.Permissions()
 CONSTANTS = constants.CONSTANTS()
 bot = TeleBot(os.getenv('TOKEN'))
-p = ProfanityFilter()
-p.init(["ru"])
+profanity_regex = re.compile(r"(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*")
 
 FOUNDER_ID = int(os.getenv('FOUNDER_ID'))
 
@@ -148,7 +146,7 @@ def message_listener(message):
 def kalik(message):
     text = message.text.lower()
     
-    contains_profanity = p.filter_text(text, match_threshold=0.9)
+    contains_profanity = bool(profanity_regex.search(text))
     if contains_profanity:
         bot.reply_to(message, "Я не люблю маты! 😡")
         return

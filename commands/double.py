@@ -93,9 +93,9 @@ def handle(
     if status == "before":
         hours, minutes = divmod(remaining, 60)
         if hours > 0:
-            bot.reply_to(message, f"Учебный день ещё не начался ✨ До первой пары ({subject}) осталось {hours} ч {minutes} мин ⏳")
+            bot.reply_to(message, f"Учебный день ещё впереди 🌸 Первая пара — {subject}, начнётся через {hours} ч {minutes} мин ⏳")
         else:
-            bot.reply_to(message, f"Учебный день ещё не начался ✨ До первой пары ({subject}) осталось {minutes} минут ⏳")
+            bot.reply_to(message, f"До встречи с {subject} осталось {hours} ч {minutes} мин 🌿✨")
 
     elif status == "lesson":
         bot.reply_to(
@@ -106,7 +106,7 @@ def handle(
     elif status == "break":
         bot.reply_to(
             message,
-            f"Сейчас перемена ✨ До {num}-го урока ({subject}) осталось {remaining} минут ⏳"
+            f"Сейчас переменка ✨ До {num}-го урока ({subject}) осталось {remaining} минуточек ⏳"
         )
 
     else:  # after

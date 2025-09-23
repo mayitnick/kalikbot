@@ -24,6 +24,5 @@ def handle(
         full_name = user["full_name"]
         bot.reply_to(message,
                         f"Информация о {get_url_from_id(full_name, message.from_user.id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
-    bot.reply_to(message, "Меня создал величайший VayLorm! Он же @MayITNick. Он меня наделил всеми теми репликами, которыми я обнимаю вас каждый день!\nВ общем, топ челик!")
     return True  # сигнал, что команда сработала
     # я хезе, это не везде есть, но мне в падлу это проверять :3

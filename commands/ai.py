@@ -16,21 +16,21 @@ def handle(
     FOUNDER_ID: int,
 ) -> bool:
     try:
-        # Достаём имя и пол пользователя
-        user_firstname = message.from_user.first_name or "пользователь"
-        user_is_male = message.from_user.is_premium  # тут костыль, в API Telegram пола нет
-        # В базе можно хранить выбранный пол/обращение (если реализуешь)
-        
-        # Формируем текст с контекстом
-        user_context = f"Имя пользователя: {user_firstname}. " \
-                       f"Пол: {'мужской' if user_is_male else 'неизвестен/женский'}. " \
-                       f"Сообщение: {message.text}"
-        
-        answer = ai.ask_io_net(user_context)
-        
+        # Берём текст без команды/алиаса
+        text = message.text
+        for alias in ALIASES:
+            if text.lower().startswith(f"кали {alias}"):
+                text = text[len(f"кали {alias}"):].strip()
+                break
+
+        if not text:
+            text = "привет"  # чтобы не отправлять пустоту в нейросеть
+
+        answer = ai.ask_io_net(text)
+
         if not answer or answer.strip() == "":
-            answer = f"{user_firstname}, я что-то завис... повтори? (・・ )?"
-        
+            answer = "(завис... попробуй ещё раз?) (・・ )?"
+
         bot.reply_to(message, answer)
         return True
     except Exception as e:

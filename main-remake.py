@@ -146,10 +146,10 @@ def message_listener(message):
 def kalik(message):
     text = message.text.lower()
     
-    contains_profanity = bool(profanity_regex.search(text))
+    """contains_profanity = bool(profanity_regex.search(text))
     if contains_profanity:
         bot.reply_to(message, "Я не люблю маты! 😡")
-        return
+        return"""
     
     # 1. Сначала проверяем чистый зов
     from commands import call

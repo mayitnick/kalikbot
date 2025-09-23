@@ -12,10 +12,9 @@ dotenv.load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 
-def send_react(chat_id, message_id):
+def send_react(chat_id, message_id, emoji):
     global TOKEN
     
-    emo = ["🔥", "🤗", "😎"]
     url = f'https://api.telegram.org/bot{TOKEN}/setMessageReaction'
     data = {
         'chat_id': chat_id,
@@ -23,8 +22,7 @@ def send_react(chat_id, message_id):
         'reaction': [
             {
                 'type': 'emoji',
-                #'emoji': '🔥' # Обычный вариант с одним смайлом.
-                'emoji': choice(emo) # Вариант со списком из смайликов.
+                'emoji': emoji
             }
         ],
         'is_big': False
@@ -42,6 +40,6 @@ def handle(
     CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,) -> bool:
     
-    send_react(message.chat.id, message.message_id)
+    send_react(message.chat.id, message.message_id, "🔥")
     return True  # сигнал, что команда сработала
     # я хезе, это не везде есть, но мне в падлу это проверять :3

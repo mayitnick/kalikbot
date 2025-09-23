@@ -9,7 +9,7 @@ def get_url_from_id(full_name, id):
     # [Имя](tg://user?id=123456789)
     return f"[{full_name}](tg://user?id={id})"
 
-ALIASES = ["я", "обо мне"]
+ALIASES = ["обо мне"]
 
 def handle(
     message: Message,

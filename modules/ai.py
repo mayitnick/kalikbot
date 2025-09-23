@@ -8,8 +8,8 @@ AI_TOKEN = os.getenv("AI_TOKEN")
 API_URL = "https://api.intelligence.io.solutions/api/v1/chat/completions"
 
 def ask_io_net(text, model_id="Qwen/Qwen3-Next-80B-A3B-Instruct"):
-    if not API_KEY:
-        return "Ошибка: не установлен IOINTELLIGENCE_API_KEY"
+    if not AI_TOKEN:
+        return "Ошибка: не установлен AI_TOKEN"
     
     headers = {
         "accept": "application/json",

@@ -26,11 +26,17 @@ def handle(
         if not text:
             text = "привет"  # чтобы не отправлять пустоту в нейросеть
 
+        sent_msg = bot.reply_to(message, "Секу, дай подумать...")
+        
         answer = ai.ask_io_net(text)
 
         if not answer or answer.strip() == "":
             answer = "(завис... попробуй ещё раз?) (・・ )?"
-
+        bot.edit_message_text(
+            answer,
+            chat_id=message.chat.id,
+            message_id=sent_msg.message_id,
+        )
         bot.reply_to(message, answer)
         return True
     except Exception as e:

@@ -37,7 +37,6 @@ def handle(
             chat_id=message.chat.id,
             message_id=sent_msg.message_id,
         )
-        bot.reply_to(message, answer)
         return True
     except Exception as e:
         bot.reply_to(message, f"Ошибка модуля ии: {e}")

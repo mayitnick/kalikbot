@@ -30,7 +30,7 @@ def send_react(chat_id, message_id, emoji):
     response = requests.post(url, json=data)
     result = response.json()
 
-ALIASES = ["харофий", "хороший", "харош", "хароший", "добрий", "добрый", "лютый", "имба"]
+ALIASES = ["харофий", "хороший", "харош", "хароший", "добрий", "добрый", "лютый", "имба", "лега", "легенда"]
 
 def handle(
     message: Message,

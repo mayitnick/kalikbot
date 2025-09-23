@@ -5,7 +5,7 @@ from modules.constants import CONSTANTS
 import modules.ai as ai
 import database
 
-ALIASES = ["ии"]
+ALIASES = ["отправить ии"]
 
 def handle(
     message: Message,

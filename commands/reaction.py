@@ -30,7 +30,7 @@ def send_react(chat_id, message_id, emoji):
     response = requests.post(url, json=data)
     result = response.json()
 
-ALIASES = ["реакция"]
+ALIASES = ["доброе утро"]
 
 def handle(
     message: Message,

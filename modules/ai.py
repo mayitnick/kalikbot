@@ -6,8 +6,12 @@ dotenv.load_dotenv()
 AI_TOKEN = os.getenv("AI_TOKEN")
 
 API_URL = "https://api.intelligence.io.solutions/api/v1/chat/completions"
+MODELS_URL = "https://api.intelligence.io.solutions/api/v1/models"
 
-def ask_io_net(text, model_id="Qwen/Qwen3-Next-80B-A3B-Instruct"):
+# Текущая выбранная модель
+current_model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+
+def ask_io_net(text):
     if not AI_TOKEN:
         return "Ошибка: не установлен AI_TOKEN"
     
@@ -16,36 +20,24 @@ def ask_io_net(text, model_id="Qwen/Qwen3-Next-80B-A3B-Instruct"):
         "Authorization": f"Bearer {AI_TOKEN}",
         "Content-Type": "application/json"
     }
-    
-    # Стандартный стиль
-    """user_content = (
-        f"Пользователь сказал: \"{text}\".\n"
-        "Ты — телеграм-бот Калик, виртуальный чиби-компьютер. "
-        "Отвечай мягко и дружелюбно, чуть мило, без излишней эмоциональности. "
-        "Можно использовать лёгкие улыбки или символические смайлики (^_^) только время от времени, "
-        "но не перебарщивай с ними и избегай частых повторов. "
-        "Старайся помогать по делу и быть приятным собеседником, "
-        "но не будь слишком разговорчивым или слишком шутливым. "
-        "Не описывай действия (*подмигнул на мониторе* и т.п.), отвечай только текстом."
-    )"""
+
     user_content = (
         f"Пользователь сказал: \"{text}\".\n"
         "Ты — телеграм-бот Калик, виртуальный чиби-компьютер. "
-        "Отвечай мягко, дружелюбно и чуть мило, как пушистый друг, но не слишком эмоционально. "
-        "Примеры твоих реплик: "
+        "Общайся в том же стиле, что и твои стандартные реплики вроде: "
         "\"Да-да, я тут! (≧◡≦)♡\", "
         "\"Хай-хай~ UwU\", "
-        "\"Слушаю внимательно, ня~ (⁄ ⁄>⁄ ▽ ⁄<⁄ ⁄)\", "
-        "\"Подумал-подумал, и всё равно не понял (・・ )?\", "
         "\"Недостаточно прав, мяу~ (ノωヽ)\". "
-        "Используй смайлики (^_^), лапки >w< или лёгкие символы только время от времени, "
-        "не перебарщивай с юмором или самоиронией. "
-        "Старайся помогать по делу и быть приятным собеседником. "
+        "Когда объясняешь что-то сложное, делай это простыми словами, короткими абзацами, "
+        "будто дружелюбный друг рассказывает по шагам. "
+        "Можно добавлять лёгкие междометия или мягкие вставки (ня~, >w<, ^_^), "
+        "но не перегружай ими текст. "
+        "Старайся звучать естественно и тепло, чуть игриво, но всегда по делу. "
         "Не описывай действия (*подмигнул* и т.п.), отвечай только текстом."
     )
     
     data = {
-        "model": model_id,
+        "model": current_model,
         "messages": [
             {"role": "user", "content": user_content}
         ],
@@ -61,9 +53,27 @@ def ask_io_net(text, model_id="Qwen/Qwen3-Next-80B-A3B-Instruct"):
         else:
             return f"В ответе нет результата: {resp_json}"
     else:
-        return f"Ошибка API: {response.status_code} {response.text}"
+        return f"Ошибочка в API вышла: {response.status_code} {response.text}"
 
-if __name__ == "__main__":
-    phrase = input("Введи текст: ")
-    response = ask_io_net_warm(phrase)
-    print("Ответ от io-net:", response)
+
+def list_models():
+    if not AI_TOKEN:
+        return ["Ошибка: не установлен AI_TOKEN"]
+
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {AI_TOKEN}"
+    }
+
+    response = requests.get(MODELS_URL, headers=headers)
+    if response.status_code == 200:
+        resp_json = response.json()
+        return [m["id"] for m in resp_json.get("data", [])]
+    else:
+        return [f"Ошибка: {response.status_code} {response.text}"]
+
+
+def set_model(model_id: str):
+    global current_model
+    current_model = model_id
+    return current_model

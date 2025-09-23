@@ -18,3 +18,5 @@ Thumbs.db
 # Database File
 database.json
 students.json
+# i don't know why it's here, but it need it uwu
+remote_students.json

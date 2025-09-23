@@ -5,7 +5,7 @@ import time
 from telebot import TeleBot
 from telebot.types import Message
 
-ALIASES = ["перезапуск", "рестарт", "перезагрузить", "спи", "поспи", "ложись"]
+ALIASES = ["перезапуск", "рестарт", "перезагрузить", "поспи", "ложись"]
 
 def handle(
     message: Message,

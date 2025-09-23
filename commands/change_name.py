@@ -4,7 +4,7 @@ import modules.permissions as permissions
 from modules.constants import CONSTANTS
 import database
 
-ALIASES = ["автор", "создатель", "создал", "основатель"]
+ALIASES = ["изменить имя"]
 
 def handle(
     message: Message,

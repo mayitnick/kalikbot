@@ -19,7 +19,7 @@ def if_reply_to_message(message, user_id, db):
     else:
         return db.get_user_by_id(int(user_id)), 0
 
-ALIASES = ["я", "обо мне"]
+ALIASES = ["изменить тип"]
 
 def handle(
     message: Message,

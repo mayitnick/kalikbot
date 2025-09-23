@@ -96,7 +96,7 @@ def handle(
     chat_id = message.chat.id
     group = db.get_group_by_tg_group_id(chat_id)
     if not group:
-        bot.reply_to(message, CONSTANTS["tg_no_group"])
+        bot.reply_to(message, CONSTANTS.tg_no_group)
         return
 
     group_id = group["gloris_id"]

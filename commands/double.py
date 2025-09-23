@@ -104,6 +104,8 @@ def handle(
 
     status, num, remaining, subject = get_current_status(schedule_times, lessons)
 
+    remaining += 1
+
     if status == "before":
         hours, minutes = divmod(remaining, 60)
         if hours > 0:

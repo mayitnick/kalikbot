@@ -43,6 +43,7 @@ def handle(
                     full_name = user["full_name"]
                     bot.reply_to(message,
                                 f"Информация о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
+                    return
             else:
                 if message.from_user.id == FOUNDER_ID:
                     user, is_reply = if_reply_to_message(message, user_id, db)
@@ -50,6 +51,7 @@ def handle(
                         full_name = user["full_name"]
                         bot.reply_to(message,
                                     f"Инфа о {get_url_from_id(full_name, user_id)}\nАйди: {user['telegram_id']}\nТип: {user['type']}\nГруппа: {user['group']}")
+                        return
                 bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
                 return
     except:

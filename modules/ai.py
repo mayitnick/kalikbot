@@ -42,7 +42,7 @@ def ask_io_net(text):
             {"role": "user", "content": user_content}
         ],
         "temperature": 0.5,
-        "max_tokens": 180
+        "max_tokens": 700
     }
 
     response = requests.post(API_URL, headers=headers, json=data)

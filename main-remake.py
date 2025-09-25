@@ -17,6 +17,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import modules.gloris_integration as gloris
 import modules.permissions as permissions
 import modules.constants as constants
+import modules.ai as ai
 from dotenv import load_dotenv
 from datetime import datetime
 from datetime import timedelta
@@ -32,6 +33,28 @@ import pkgutil
 import commands
 
 COMMANDS = []
+
+def send_to_ai(message):
+    try:
+        text = message.text
+        if not text:
+            text = "привет"  # чтобы не отправлять пустоту в нейросеть
+
+        sent_msg = bot.reply_to(message, "Секу, дай подумать...")
+        
+        answer = ai.ask_io_net(text)
+
+        if not answer or answer.strip() == "":
+            answer = "(завис... попробуй ещё раз?) (・・ )?"
+        bot.edit_message_text(
+            answer,
+            chat_id=message.chat.id,
+            message_id=sent_msg.message_id,
+        )
+        return True
+    except Exception as e:
+        bot.reply_to(message, f"Ошибка модуля ии: {e}")
+        return False
 
 for _, module_name, _ in pkgutil.iter_modules(commands.__path__):
     module = importlib.import_module(f"commands.{module_name}")
@@ -146,10 +169,10 @@ def message_listener(message):
 def kalik(message):
     text = message.text.lower()
     
-    contains_profanity = bool(profanity_regex.search(text))
+    """contains_profanity = bool(profanity_regex.search(text))
     if contains_profanity:
         bot.reply_to(message, "Я не люблю маты! 😡")
-        return
+        return"""
     
     # 1. Сначала проверяем чистый зов
     from commands import call
@@ -163,7 +186,9 @@ def kalik(message):
             return
 
     # 3. Если ничего не подошло
-    bot.reply_to(message, random.choice(CONSTANTS.dont_know))
+    # bot.reply_to(message, random.choice(CONSTANTS.dont_know))
+    # Раньше бот не знал что делать, а теперь, мы отправляем нейросетке сообщение >:3
+    send_to_ai(message)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):

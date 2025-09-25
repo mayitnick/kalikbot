@@ -3,4 +3,3 @@ python-dotenv
 Pillow
 beautifulsoup4
 psutil
-git+https://github.com/FlacSy/badwords.git

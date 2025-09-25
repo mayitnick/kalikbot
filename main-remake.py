@@ -34,6 +34,12 @@ import commands
 
 COMMANDS = []
 
+def escape_markdown_v2(text: str) -> str:
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    for ch in escape_chars:
+        text = text.replace(ch, f'\\{ch}')
+    return text
+
 def send_to_ai(message):
     try:
         text = message.text or "привет"
@@ -45,7 +51,7 @@ def send_to_ai(message):
             answer = "(завис... попробуй ещё раз?) (・・ )?"
 
         bot.edit_message_text(
-            answer,
+            escape_markdown_v2(answer),
             chat_id=message.chat.id,
             message_id=sent_msg.message_id,
             parse_mode='MarkdownV2',

@@ -34,10 +34,15 @@ import commands
 
 COMMANDS = []
 
-def escape_markdown_v2(text: str) -> str:
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
+def safe_markdown_v2(text: str) -> str:
+    # Экранируем только те символы, которые не входят в синтаксис Telegram
+    # и часто ломают сообщение
+    escape_chars = r'`~>#+=|{}.!'
     for ch in escape_chars:
         text = text.replace(ch, f'\\{ch}')
+    
+    # Дополнительно: убираем "висячие" символы, которые ломают парсинг
+    text = re.sub(r'(?<!\\)-', r'\-', text)  # дефисы
     return text
 
 def send_to_ai(message):
@@ -51,7 +56,7 @@ def send_to_ai(message):
             answer = "(завис... попробуй ещё раз?) (・・ )?"
 
         bot.edit_message_text(
-            escape_markdown_v2(answer),
+            safe_markdown_v2(answer),
             chat_id=message.chat.id,
             message_id=sent_msg.message_id,
             parse_mode='MarkdownV2',

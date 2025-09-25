@@ -48,6 +48,7 @@ def send_to_ai(message):
             answer,
             chat_id=message.chat.id,
             message_id=sent_msg.message_id,
+            parse_mode='Markdown',
         )
         return True
     except Exception as e:

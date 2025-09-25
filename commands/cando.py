@@ -4,7 +4,7 @@ import modules.permissions as permissions
 from modules.constants import CONSTANTS
 import database
 
-ALIASES = ["можешь", "умеешь", "команды", "помощь"]
+ALIASES = ["что ты умеешь", "что ты можешь", "команды", "помощь"]
 
 def handle(
     message: Message,

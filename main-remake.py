@@ -200,7 +200,7 @@ def callback_inline(call):
 
 me = bot.get_me()
 print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")
-bot.send_message(7519306123, "🔥 Калик запущен!")
+bot.send_message(FOUNDER_ID, "🔥 Калик запущен!")
 try:
     bot.infinity_polling()
 except requests.exceptions.ConnectionError:

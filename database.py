@@ -246,15 +246,15 @@ class Database:
             print("Расписание не найдено.")
             return None
     def setup_duty_info(self, id):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
+        user = self.get_user_by_id(id)
+        if user:
             if user["duty_info"] is None:
                 user["duty_info"] = {
                     "last_duty": None,
                     "amount_of_duties": None,
-                    "pair_id": None,
-                    "preferences": None
-                }
+                    "preferences": None,
+                    "pair_id": None
+                    }
                 self.save()
     def set_last_duty(self, id, last_duty):
         user = self.get_user_by_id(id)

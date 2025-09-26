@@ -4,6 +4,7 @@ import modules.permissions as permissions
 from modules.constants import CONSTANTS
 import database
 import random
+import traceback
 
 # Временное решение, нужно будет это потом в отдельный модуль вынести ;)
 def get_url_from_id(full_name, id):
@@ -55,6 +56,7 @@ def handle(
                 bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
                 return
     except:
-        bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, о нём 12345678". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+        bot.reply_to(message, '❌ Ошибка! Нужно написать в таком формате: "Калик, дежурство 12345678". Вместо 12345678 надо указать айди студента в ТГ ("Калик, айди")') 
+        traceback.print_exc()
     return True  # сигнал, что команда сработала
     # я хезе, это не везде есть, но мне в падлу это проверять :3

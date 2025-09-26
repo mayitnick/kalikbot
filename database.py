@@ -257,43 +257,82 @@ class Database:
                 }
                 self.save()
     def set_last_duty(self, id, last_duty):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
-            user["duty_info"]["last_duty"] = last_duty
-            self.save()
-            print(f"Последний дежурный для пользователя {id} установлен.")
-            return True
-    def set_amount_of_duties(self, id, amount_of_duties):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
-            user["duty_info"]["amount_of_duties"] = amount_of_duties
-            self.save()
-            print(f"Количество дежурств для пользователя {id} установлено.")
-            return True
-    def add_amount_of_duties(self, id):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
-            if user["duty_info"]["amount_of_duties"] is not None:
-                user["duty_info"]["amount_of_duties"] += 1
+        user = self.get_user_by_id(id)
+        if user:
+            if user["duty_info"]["last_duty"] is None:
+                user["duty_info"]["last_duty"] = last_duty
+                print(f"Последний дежурный для пользователя {id} установлен.")
                 self.save()
-                print(f"Количество дежурств для пользователя {id} увеличено.")
                 return True
+            else:
+                if user["duty_info"]["last_duty"] == last_duty:
+                    print(f"Последний дежурный для пользователя {id} уже установлен.")
+                    return True
+                else:
+                    print(f"Последний дежурный для пользователя {id} уже установлен.")
+                    return False
+    def set_amount_of_duties(self, id, amount_of_duties):
+        user = self.get_user_by_id(id)
+        if user:
+            if user["duty_info"]["amount_of_duties"] is None:
+                user["duty_info"]["amount_of_duties"] = amount_of_duties
+                self.save()
+                print(f"Количество дежурств для пользователя {id} установлено.")
+                return True
+            else:
+                if user["duty_info"]["amount_of_duties"] == amount_of_duties:
+                    print(f"Количество дежурств для пользователя {id} уже установлено.")
+                    return True
+                else:
+                    print(f"Количество дежурств для пользователя {id} уже установлено.")
+                    return False
+    def add_amount_of_duties(self, id):
+        user = self.get_user_by_id(id)
+        if user:
+            if user["duty_info"]["amount_of_duties"] is None:
+                user["duty_info"]["amount_of_duties"] = 1
+                self.save()
+                print(f"Количество дежурств для пользователя {id} установлено.")
+                return True
+            else:
+                if user["duty_info"]["amount_of_duties"] == 1:
+                    print(f"Количество дежурств для пользователя {id} уже установлено.")
+                    return True
+                else:
+                    user["duty_info"]["amount_of_duties"] += 1
+                    self.save()
+                    print(f"Количество дежурств для пользователя {id} увеличено.")
+                    return True
     def set_pair_id(self, id, pair_id):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
+        user = self.get_user_by_id(id)
+        if user:
             user["duty_info"]["pair_id"] = pair_id
-            self.save()
             print(f"Пара для пользователя {id} установлена.")
-            return True
-    def add_to_preferences(self, id, pair_id):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
-            if user["duty_info"]["preferences"] is None:
-                user["duty_info"]["preferences"] = []
-            if pair_id not in user["duty_info"]["preferences"]:
-                user["duty_info"]["preferences"].append(pair_id)
             self.save()
+            return True
+        else:
+            return False
+    def add_to_preferences(self, id, choice):
+        user = self.get_user_by_id(id)
+        # Предпочтения пользователь - день недели или дата
+        # Это список, поэтому если нет то создаём и добавляем элемент, если есть то просто добавляем
+        if user:
+            if user["duty_info"]["preferences"] is None:
+                user["duty_info"]["preferences"] = [choice]
+                self.save()
+                print(f"Предпочтение для пользователя {id} установлено.")
+                return True
+            else:
+                if choice not in user["duty_info"]["preferences"]:
+                    user["duty_info"]["preferences"].append(choice)
+                    self.save()
+                    print(f"Предпочтение для пользователя {id} добавлено.")
+                    return True
+                else:
+                    print(f"Предпочтение для пользователя {id} уже установлено.")
+                    return False
     def get_duty_info(self, id):
-        if id in [user["id"] for user in self.data["students"]]:
-            user = self.get_user_by_id(id)
-            return user["duty_info"]
+        user = self.get_user_by_id(id)
+        if user:
+            if user["duty_info"]:
+                return user["duty_info"]

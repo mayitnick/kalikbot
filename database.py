@@ -245,3 +245,55 @@ class Database:
         else:
             print("Расписание не найдено.")
             return None
+    def setup_duty_info(self, id):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            if user["duty_info"] is None:
+                user["duty_info"] = {
+                    "last_duty": None,
+                    "amount_of_duties": None,
+                    "pair_id": None,
+                    "preferences": None
+                }
+                self.save()
+    def set_last_duty(self, id, last_duty):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            user["duty_info"]["last_duty"] = last_duty
+            self.save()
+            print(f"Последний дежурный для пользователя {id} установлен.")
+            return True
+    def set_amount_of_duties(self, id, amount_of_duties):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            user["duty_info"]["amount_of_duties"] = amount_of_duties
+            self.save()
+            print(f"Количество дежурств для пользователя {id} установлено.")
+            return True
+    def add_amount_of_duties(self, id):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            if user["duty_info"]["amount_of_duties"] is not None:
+                user["duty_info"]["amount_of_duties"] += 1
+                self.save()
+                print(f"Количество дежурств для пользователя {id} увеличено.")
+                return True
+    def set_pair_id(self, id, pair_id):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            user["duty_info"]["pair_id"] = pair_id
+            self.save()
+            print(f"Пара для пользователя {id} установлена.")
+            return True
+    def add_to_preferences(self, id, pair_id):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            if user["duty_info"]["preferences"] is None:
+                user["duty_info"]["preferences"] = []
+            if pair_id not in user["duty_info"]["preferences"]:
+                user["duty_info"]["preferences"].append(pair_id)
+            self.save()
+    def get_duty_info(self, id):
+        if id in [user["id"] for user in self.data["users"]]:
+            user = self.get_user_by_id(id)
+            return user["duty_info"]

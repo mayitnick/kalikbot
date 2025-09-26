@@ -51,7 +51,7 @@ def handle(
                     try:
                         if duty_info["last_duty"]:
                             # нужно посчитать, сколько дней назад был дежурный
-                            days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d %H:%M:%S")).days
+                            days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d")).days
                             bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}\nОн дежурил {days} дней назад, он {'может' if days >= 7 else 'не может'} дежурить")
                         else:
                             bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ")

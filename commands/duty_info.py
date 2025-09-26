@@ -46,11 +46,14 @@ def handle(
                     if not duty_info:
                         db.setup_duty_info(user_id)
                     
-                    if duty_info["last_duty"]:
-                        bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}")
-                    else:
+                    # Здесь может давать keyerror, надо фиксить
+                    try:
+                        if duty_info["last_duty"]:
+                            bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}")
+                        else:
+                            bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ")
+                    except KeyError:
                         bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ")
-                    
                     return
             else:
                 bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))

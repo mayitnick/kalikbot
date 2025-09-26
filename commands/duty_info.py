@@ -5,6 +5,7 @@ from modules.constants import CONSTANTS
 import database
 import random
 import traceback
+import datetime
 
 # Временное решение, нужно будет это потом в отдельный модуль вынести ;)
 def get_url_from_id(full_name, id):
@@ -49,7 +50,9 @@ def handle(
                     # Здесь может давать keyerror, надо фиксить
                     try:
                         if duty_info["last_duty"]:
-                            bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}")
+                            # нужно посчитать, сколько дней назад был дежурный
+                            days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d %H:%M:%S")).days
+                            bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}\nОн дежурил {days} дней назад, он {'может' if days >= 7 else 'не может'} дежурить")
                         else:
                             bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ")
                     except KeyError:

@@ -193,12 +193,16 @@ def handle(
             return True
 
         # Строим текст ответа
-        reply_lines = [f"🎲 Реролл завершён! Выбраны дежурные ({len(selected)}):"]
+        reply_lines = [md_escape("🎲 Реролл завершён! Выбраны дежурные ({})".format(len(selected)))]
         for u in selected:
             info = u.get("duty_info") or {}
-            reply_lines.append(f"• {get_url_from_id(u.get('full_name'), u.get('telegram_id'))} — дежурств: {info.get('amount_of_duties', 0)}; last: {info.get('last_duty') or 'никогда'}")
+            reply_lines.append(
+                f"• {get_url_from_id(md_escape(u.get('full_name')), md_escape(u.get('telegram_id')))} — "
+                f"{md_escape('дежурств: ' + str(info.get('amount_of_duties', 0)) + '; last: ' + (info.get('last_duty') or 'никогда'))}"
+        )
 
         reply_text = "\n".join(reply_lines)
+        print(f"\"{reply_text}\"")
         bot.reply_to(message, reply_text, parse_mode="MarkdownV2")
 
         return True

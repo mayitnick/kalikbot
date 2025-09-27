@@ -7,12 +7,17 @@ import random
 import traceback
 import datetime
 
-def get_url_from_id(full_name, id):
-    return f"[{full_name}](tg://user?id={id})"
+def md_escape(text: str) -> str:
+    if text is None:
+        return ""
+    text = str(text)
+    # список символов, которые нужно экранировать в MarkdownV2
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    return ''.join('\\' + c if c in escape_chars else c for c in text)
 
-def escape_markdown(text: str) -> str:
-    escape_chars = r'_-'
-    return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
+# Ссылка на пользователя (MarkdownV2)
+def get_url_from_id(full_name, tg_id):
+    return f"[{md_escape(full_name)}](tg://user?id={tg_id})"
 
 ALIASES = ["реролл"]
 
@@ -34,6 +39,14 @@ def handle(
     - ОБРАБАТЫВАЕТ случаи, когда user["duty_info"] == None
     """
     try:
+        parts = message.text.split()
+        # Кали, реролл 12345678
+        # Нужно достать как раз таки 12345678
+        # Если конечно 12345678 есть, потому что если нету то берём message.chat.id
+        if len(parts) > 2:
+            group_id = int(parts[2])
+        else:
+            group_id = message.chat.id
         # 1) Автор и проверка прав
         author = db.get_user_by_id(message.from_user.id)
         if not author:
@@ -45,7 +58,7 @@ def handle(
             return True
 
         # 2) Группа по ID чата
-        group = db.get_group_by_id(message.chat.id)
+        group = db.get_group_by_id(group_id)
         if not group:
             bot.reply_to(message, "❌ Эта группа не зарегистрирована в базе.")
             return True

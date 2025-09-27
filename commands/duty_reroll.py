@@ -58,7 +58,7 @@ def handle(
             return True
 
         # 2) Группа по ID чата
-        bot.reply_to(message, f"✅ Реролл для группы {group_id}...")
+        bot.reply_to(message, f"✅ Реролл для группы {group_id} (type={type(group_id)})...")
         group = db.get_group_by_id(group_id)
         if not group:
             bot.reply_to(message, "❌ Эта группа не зарегистрирована в базе.")

@@ -20,6 +20,10 @@ def if_reply_to_message(message, user_id, db):
     else:
         return db.get_user_by_id(int(user_id)), 0
 
+def escape_markdown(text: str) -> str:
+    escape_chars = r'_-'
+    return ''.join(f'\\{c}' if c in escape_chars else c for c in text)
+
 ALIASES = ["дежурство"]
 
 def handle(
@@ -52,7 +56,7 @@ def handle(
                         if duty_info["last_duty"]:
                             # нужно посчитать, сколько дней назад был дежурный
                             days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d")).days
-                            bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {duty_info['last_duty']}\nОн дежурил {days} дней назад, он {'может' if days >= 7 else 'не может'} дежурить", parse_mode="MarkdownV2")
+                            bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {escape_markdown(duty_info['last_duty'])}\nОн дежурил {days} дней назад, он {'может' if days >= 7 else 'не может'} дежурить", parse_mode="MarkdownV2")
                         else:
                             bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ", parse_mode="MarkdownV2")
                     except KeyError:

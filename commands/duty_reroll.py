@@ -16,7 +16,7 @@ def escape_markdown(text: str) -> str:
 
 ALIASES = ["реролл"]
 
-def handle_reroll(
+def handle(
     message: Message,
     bot: TeleBot,
     db: database.Database,

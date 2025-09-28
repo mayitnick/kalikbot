@@ -53,7 +53,7 @@ def handle(
                     
                     # Здесь может давать keyerror, надо фиксить
                     try:
-                        message_to_sent = f"✅ {get_url_from_id(full_name, user_id)}: "
+                        message_to_sent = f"✅ {get_url_from_id(full_name, user_id)}:\n"
                         if duty_info["last_duty"]:
                             message_to_sent += f"был дежурным {escape_markdown(duty_info['last_duty'])}\n"
                         else:

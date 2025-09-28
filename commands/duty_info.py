@@ -53,12 +53,38 @@ def handle(
                     
                     # Здесь может давать keyerror, надо фиксить
                     try:
+                        message_to_sent = f"✅ {get_url_from_id(full_name, user_id)}: "
                         if duty_info["last_duty"]:
-                            # нужно посчитать, сколько дней назад был дежурный
-                            days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d")).days
+                            message_to_sent += f"был дежурным {escape_markdown(duty_info['last_duty'])}\n"
+                        else:
+                            message_to_sent += "не был дежурным\n"
+                        """
+                        "duty_info": {
+                            "last_duty": "2023-05-12",
+                            "amount_of_duties": 3,
+                            "pair_id": 5201965668,
+                            "preferences": ["2023-05-12", "понедельник"]
+                        }
+                        """
+                        if duty_info["amount_of_duties"]:
+                            message_to_sent += "был дежурным " + str(duty_info["amount_of_duties"]) + " раз\n"
+                        if duty_info["pair_id"]:
+                            # Нужно попробовать найти этого человека пары в бд
+                            pair = db.get_user_by_id(duty_info["pair_id"])
+                            if pair:
+                                message_to_sent += "предпочитает дежурить с " + get_url_from_id(pair["full_name"], duty_info["pair_id"]) + "\n"
+                            else:
+                                message_to_sent += "предпочитает дежурить с " + str(duty_info["pair_id"]) + "(информация о паре не известна)\n"
+                        if duty_info["preferences"]:
+                            for i in duty_info["preferences"]:
+                                message_to_sent += "предпочитает дежурить " + i + "\n"
+                        bot.reply_to(message, message_to_sent, parse_mode="MarkdownV2")
+                        # нужно посчитать, сколько дней назад был дежурный
+                        """days = (datetime.datetime.now() - datetime.datetime.strptime(duty_info["last_duty"], "%Y-%m-%d")).days
                             bot.reply_to(message, f"✅ {get_url_from_id(full_name, user_id)} был дежурным {escape_markdown(duty_info['last_duty'])}\nОн дежурил {days} дней назад, он {'может' if days >= 7 else 'не может'} дежурить", parse_mode="MarkdownV2")
                         else:
-                            bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ", parse_mode="MarkdownV2")
+                            bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ", parse_mode="MarkdownV2")"""
+                            
                     except KeyError:
                         bot.reply_to(message, f"❌ {get_url_from_id(full_name, user_id)} не был дежурным. ")
                     return

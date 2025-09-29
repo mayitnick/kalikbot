@@ -54,7 +54,7 @@ def handle(
             return True
 
         if not (perm.check_for_permissions(author["type"], "duty.reroll") or message.from_user.id == FOUNDER_ID):
-            bot.reply_to(message, random.choice(CONSTANTS["kalik_noperm"]))
+            bot.reply_to(message, random.choice(CONSTANTS.kalik_noperms))
             return True
 
         # 2) Группа по ID чата

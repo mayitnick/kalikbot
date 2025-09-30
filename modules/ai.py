@@ -184,7 +184,7 @@ def ask_io_net(text: str, user_id: str, use_prompt: bool = True, max_tokens: int
     payload = {
         "model": current_model,
         "messages": messages,
-        "temperature": 0.5,
+        "temperature": 0.9,
         "max_tokens": max_tokens
     }
 

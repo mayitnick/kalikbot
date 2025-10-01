@@ -140,7 +140,7 @@ def analyze_command(message):
     # Берём самую большую версию фото
     photo = message.reply_to_message.photo[-1]
     file_info = bot.get_file(photo.file_id)
-    image_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
+    image_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
 
     sent_msg = bot.reply_to(message, "Ням-ням, анализирую изображение… ⏳")
 

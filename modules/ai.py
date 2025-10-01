@@ -296,7 +296,7 @@ def analyze_image_file(file_id: str, user_id: str, bot, prompt: str = "Что н
     }
 
     payload = {
-        "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
+        "model": "Qwen/Qwen2-VL-7B-Instruct",
         "messages": [
             {"role": "system", "content": "Ты — AI-помощник, описывающий изображения максимально подробно."},
             {"role": "user", "content": [

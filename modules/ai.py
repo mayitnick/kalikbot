@@ -282,7 +282,7 @@ def analyze_image(image_url: str, user_id: str, prompt: str = "Что на эт�
     payload = {
         "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
         "messages": [
-            {"role": "system", "content": "You are an AI assistant."},
+            {"role": "system", "content": "You are an AI assistant who describes the pictures in as much detail as possible"},
             {"role": "user", "content": [
                 {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url": image_url}}

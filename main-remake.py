@@ -129,24 +129,38 @@ def send_long_message(chat_id, text):
 
 @bot.message_handler(commands=["analyze"])
 def analyze_command(message):
-    # Проверяем, ответ ли это на сообщение с фото
+    # Проверяем, что сообщение — ответ на другое сообщение
     if not message.reply_to_message or not message.reply_to_message.photo:
-        bot.reply_to(message, "Пожалуйста, используй команду, ответив на сообщение с изображением 📸")
+        bot.reply_to(
+            message,
+            "Привет~! 🐾 Чтобы я описал изображение, ответь на само фото этой командой /analyze"
+        )
         return
 
-    sent_msg = bot.reply_to(message, "Секундочку, анализирую изображение...")
-
-    # Берём самое большое фото из оригинального сообщения
+    # Берём самую большую версию фото
     photo = message.reply_to_message.photo[-1]
-    file_id = photo.file_id
+    file_info = bot.get_file(photo.file_id)
+    image_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}"
 
-    result = ai.analyze_image_file(file_id, user_id=message.from_user.id, bot=bot)
+    sent_msg = bot.reply_to(message, "Ням-ням, анализирую изображение… ⏳")
 
-    bot.edit_message_text(
-        result, 
-        chat_id=message.chat.id, 
-        message_id=sent_msg.message_id
-    )
+    try:
+        # Здесь вызываем функцию из ai.py
+        description = ai.analyze_image(image_url, user_id=message.from_user.id)
+        if not description:
+            description = "Упс… анализ занял слишком много времени. Попробуй прислать фото снова чуть позже ^_^"
+
+        bot.edit_message_text(
+            description,
+            chat_id=sent_msg.chat.id,
+            message_id=sent_msg.message_id
+        )
+    except Exception as e:
+        bot.edit_message_text(
+            f"Ошибка при анализе изображения: {e}",
+            chat_id=sent_msg.chat.id,
+            message_id=sent_msg.message_id
+        )
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

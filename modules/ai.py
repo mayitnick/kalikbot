@@ -121,7 +121,9 @@ SYSTEM_PROMPT = (
 
 
 # --- память ---
-conversation_history = []  # краткосрочная история (глобальная)
+# раньше: conversation_history = []  # краткосрочная история (глобальная)
+# заменяем на словарь по chat_id
+conversation_history = {}  # { str(chat_id): [ {"role":"user"/"assistant", "content": "..."} , ... ] }
 
 # долговременная память: {user_id: [факты...]}
 if os.path.exists(MEMORY_FILE):
@@ -143,11 +145,12 @@ def _save_memory():
         pass
 
 # --- API ---
-def ask_io_net(text: str, user_id: str, use_prompt: bool = True, max_tokens: int = 700):
+def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = True, max_tokens: int = 700):
     """
     text — сообщение от пользователя.
     user_id — id пользователя (для отдельной памяти).
-    use_prompt=True -> добавим системный промпт + личную память + историю.
+    chat_id — id чата (для локальной истории и групповой памяти).
+    use_prompt=True -> добавим системный промпт + личную память + история чата.
     """
     global conversation_history, longterm_memory, current_model
 
@@ -163,19 +166,33 @@ def ask_io_net(text: str, user_id: str, use_prompt: bool = True, max_tokens: int
     # подгружаем личную память
     user_memory = longterm_memory.get(str(user_id), [])
 
+    # подгружаем групповую память (если chat_id указан)
+    chat_memory = []
+    if chat_id is not None:
+        chat_key = f"chat:{chat_id}"
+        chat_memory = longterm_memory.get(chat_key, [])
+
     if use_prompt:
+        # собираем системный контент: SYSTEM_PROMPT + память пользователя + память чата
+        mem_parts = []
         if user_memory:
-            mem_snippet = "\n".join(user_memory[-30:])
-            memory_text = "Личная память:\n- " + mem_snippet
+            # сохраняем не более N последних фактов (например, 30)
+            mem_parts.append("Личная память:\n- " + "\n- ".join(user_memory[-30:]))
+        if chat_memory:
+            mem_parts.append("Память чата:\n- " + "\n- ".join(chat_memory[-50:]))
+        if mem_parts:
+            memory_text = "\n\n".join(mem_parts)
             system_content = SYSTEM_PROMPT + "\n\n" + memory_text
         else:
             system_content = SYSTEM_PROMPT
 
         messages = [{"role": "system", "content": system_content}]
 
-        # добавляем последние 10 сообщений из истории (глобальной)
-        if conversation_history:
-            messages.extend(conversation_history[-10:])
+        # добавляем последние 10 сообщений из истории данного чата (если есть)
+        if chat_id is not None:
+            hist = conversation_history.get(str(chat_id), [])
+            if hist:
+                messages.extend(hist[-10:])
 
         messages.append({"role": "user", "content": text})
     else:
@@ -198,23 +215,49 @@ def ask_io_net(text: str, user_id: str, use_prompt: bool = True, max_tokens: int
         if "choices" in resp_json and len(resp_json["choices"]) > 0:
             answer = resp_json["choices"][0]["message"]["content"]
 
-            # ищем действие "запомнить"
+            # --- обработка ACTION:REMEMBER ---
             m = re.search(r"<<ACTION:REMEMBER:(.*?)>>", answer, flags=re.S)
             if m:
                 fact = m.group(1).strip()
                 if fact:
-                    if fact not in user_memory:
-                        user_memory.append(fact)
-                        longterm_memory[str(user_id)] = user_memory
-                        _save_memory()
+                    # по умолчанию факт сохраняем в личную память автора;
+                    # синтаксис для сохранения в память чата (опционально) может быть:
+                    # <<ACTION:REMEMBER: @chat:факт>> — тогда запишем в memory["chat:<chat_id>"]
+                    if fact.startswith("@chat:") and chat_id is not None:
+                        chat_fact = fact[len("@chat:"):].strip()
+                        chat_key = f"chat:{chat_id}"
+                        existing = longterm_memory.get(chat_key, [])
+                        if chat_fact not in existing:
+                            existing.append(chat_fact)
+                            longterm_memory[chat_key] = existing
+                            _save_memory()
+                    else:
+                        existing = longterm_memory.get(str(user_id), [])
+                        if fact not in existing:
+                            existing.append(fact)
+                            longterm_memory[str(user_id)] = existing
+                            _save_memory()
+                # удалим маркер из ответа
                 answer = re.sub(r"\s*<<ACTION:REMEMBER:.*?>>\s*", "", answer, flags=re.S).strip()
 
-            # сохраняем историю
-            conversation_history.append({"role": "user", "content": text})
-            conversation_history.append({"role": "assistant", "content": answer})
-
-            if len(conversation_history) > 200:
-                conversation_history = conversation_history[-200:]
+            # --- добавляем в историю чата только этот запрос/ответ ---
+            if chat_id is not None:
+                hist = conversation_history.get(str(chat_id), [])
+                hist.append({"role": "user", "content": text})
+                hist.append({"role": "assistant", "content": answer})
+                # ограничение длины истории на чат (например, 200 сообщений)
+                if len(hist) > 200:
+                    hist = hist[-200:]
+                conversation_history[str(chat_id)] = hist
+            else:
+                # если chat_id не передан — можно хранить в отдельном ключе "dm:<user_id>"
+                dm_key = f"dm:{user_id}"
+                hist = conversation_history.get(dm_key, [])
+                hist.append({"role": "user", "content": text})
+                hist.append({"role": "assistant", "content": answer})
+                if len(hist) > 200:
+                    hist = hist[-200:]
+                conversation_history[dm_key] = hist
 
             return answer
         else:
@@ -247,9 +290,15 @@ def set_model(model_id: str):
     return current_model
 
 def show_memory(user_id: str):
+    """Возвращает копию личной памяти (список)."""
     return longterm_memory.get(str(user_id), []).copy()
 
+def show_chat_memory(chat_id: str):
+    """Показывает память, связанную с чатом (ключ 'chat:<chat_id>')."""
+    return longterm_memory.get(f"chat:{chat_id}", []).copy()
+
 def forget_memory(user_id: str, index: int):
+    """Удаление по индексу (как у вас было)."""
     user_memory = longterm_memory.get(str(user_id), [])
     if 0 <= index < len(user_memory):
         removed = user_memory.pop(index)
@@ -258,9 +307,38 @@ def forget_memory(user_id: str, index: int):
         return removed
     return None
 
+def forget_memory_by_text(user_id: str, text_substr: str):
+    """
+    Удаляет факты, содержащие подстроку text_substr (регистрозависимо).
+    Возвращает список удалённых фактов.
+    """
+    key = str(user_id)
+    user_memory = longterm_memory.get(key, [])
+    removed = []
+    new = []
+    for fact in user_memory:
+        if text_substr in fact:
+            removed.append(fact)
+        else:
+            new.append(fact)
+    if removed:
+        longterm_memory[key] = new
+        _save_memory()
+    return removed
+
 def reset_memory(user_id: str):
+    """Сброс личной памяти (как у вас было)."""
     if str(user_id) in longterm_memory:
         longterm_memory[str(user_id)] = []
+        _save_memory()
+        return True
+    return False
+
+def reset_chat_memory(chat_id: str):
+    """Сброс памяти чата."""
+    key = f"chat:{chat_id}"
+    if key in longterm_memory:
+        longterm_memory[key] = []
         _save_memory()
         return True
     return False

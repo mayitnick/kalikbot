@@ -129,7 +129,7 @@ def send_long_message(chat_id, text):
 
 @bot.message_handler(commands=["analyze"])
 def analyze_command(message):
-    # Проверяем, что сообщение — ответ на другое сообщение
+    # Проверяем, что сообщение — ответ на другое сообщение с фото
     if not message.reply_to_message or not message.reply_to_message.photo:
         bot.reply_to(
             message,
@@ -137,16 +137,20 @@ def analyze_command(message):
         )
         return
 
-    # Берём самую большую версию фото
+    # Берём file_id самой большой версии фото
     photo = message.reply_to_message.photo[-1]
-    file_info = bot.get_file(photo.file_id)
-    image_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
+    file_id = photo.file_id
 
     sent_msg = bot.reply_to(message, "Ням-ням, анализирую изображение… ⏳")
 
     try:
-        # Здесь вызываем функцию из ai.py
-        description = ai.analyze_image(image_url, user_id=message.from_user.id)
+        # Используем ai.analyze_image_file
+        description = ai.analyze_image_file(
+            file_id=file_id,
+            user_id=message.from_user.id,
+            bot=bot,
+            prompt="Что на этом изображении?"
+        )
         if not description:
             description = "Упс… анализ занял слишком много времени. Попробуй прислать фото снова чуть позже ^_^"
 

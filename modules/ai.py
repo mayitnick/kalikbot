@@ -266,7 +266,7 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
     else:
         return f"Ошибочка в API вышла: {resp.status_code} {resp.text}"
 
-def analyze_image(file_id: str, user_id: str, bot, prompt: str = "Что на этом изображении?"):
+def analyze_image_file(file_id: str, user_id: str, bot, prompt: str = "Что на этом изображении?"):
     """
     Анализ изображения из Telegram (file_id) через vision-модель,
     затем сжатие текста через текстовую модель.

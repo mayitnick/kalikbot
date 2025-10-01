@@ -127,29 +127,20 @@ def send_long_message(chat_id, text):
     for i in range(0, len(text), max_len):
         bot.send_message(chat_id, text[i:i+max_len])
 
-@bot.message_handler(commands=['analyze'])
+@bot.message_handler(commands=["analyze"])
 def analyze_command(message):
-    if not message.reply_to_message or not message.reply_to_message.photo:
-        bot.reply_to(message, "Пришли мне фото командой /analyze (ответом на изображение) 🖼️")
-        return
+    sent_msg = bot.reply_to(message, "Секундочку, анализирую изображение...")
 
-    try:
-        file_id = message.reply_to_message.photo[-1].file_id
-        file_info = bot.get_file(file_id)
-        image_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
-
-        sent_msg = bot.reply_to(message, "Анализирую изображение, хвостиком машу... ⌛")
-
-        answer = ai.analyze_image(image_url, user_id=message.from_user.id)
-
-        bot.edit_message_text(
-            answer,
-            chat_id=message.chat.id,
-            message_id=sent_msg.message_id,
-        )
-    except Exception as e:
-        bot.reply_to(message, f"Ошибка анализа изображения: {e}")
-
+    # Проверяем, есть ли фото
+    if message.photo:
+        # Берём самое большое фото
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        result = ai.analyze_image_file(file_id, user_id=message.from_user.id, bot=bot)
+        bot.edit_message_text(result, chat_id=message.chat.id, message_id=sent_msg.message_id)
+    else:
+        bot.edit_message_text("Пожалуйста, отправь команду вместе с изображением.", 
+                              chat_id=message.chat.id, message_id=sent_msg.message_id)
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

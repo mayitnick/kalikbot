@@ -4,6 +4,7 @@ import json
 import re
 import requests
 import dotenv
+import base64
 
 dotenv.load_dotenv()
 AI_TOKEN = os.getenv("AI_TOKEN")
@@ -265,13 +266,27 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
     else:
         return f"Ошибочка в API вышла: {resp.status_code} {resp.text}"
 
-def analyze_image(image_url: str, user_id: str, prompt: str = "Что на этом изображении?"):
+def analyze_image_file(file_id: str, user_id: str, bot, prompt: str = "Что на этом изображении?"):
     """
-    Анализ изображения через vision-модель, затем сжатие текста через текстовую модель.
+    Анализ изображения из Telegram (file_id) через vision-модель,
+    затем сжатие текста через текстовую модель.
+    bot — твой объект TeleBot, чтобы получить file_path
     """
     global AI_TOKEN
     if not AI_TOKEN:
         return "Ошибка: не установлен AI_TOKEN"
+
+    # Получаем file_path через Telegram API
+    try:
+        file_info = bot.get_file(file_id)
+        file_path = file_info.file_path
+        file_url = f"https://api.telegram.org/file/bot{bot.token}/{file_path}"
+        img_resp = requests.get(file_url)
+        img_resp.raise_for_status()
+        img_bytes = img_resp.content
+        base64_image = base64.b64encode(img_bytes).decode("utf-8")
+    except Exception as e:
+        return f"Ошибка при получении изображения из Telegram: {e}"
 
     headers = {
         "accept": "application/json",
@@ -282,35 +297,34 @@ def analyze_image(image_url: str, user_id: str, prompt: str = "Что на эт�
     payload = {
         "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
         "messages": [
-            {"role": "system", "content": "You are an AI assistant who describes the pictures in as much detail as possible"},
+            {"role": "system", "content": "Ты — AI-помощник, описывающий изображения максимально подробно."},
             {"role": "user", "content": [
                 {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
+                {"type": "image", "image": base64_image}
             ]}
         ]
     }
 
     try:
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=90)
+        resp.raise_for_status()
+        resp_json = resp.json()
+    except requests.exceptions.Timeout:
+        return "Ошибка: vision-запрос превысил таймаут."
     except Exception as e:
         return f"Ошибка vision-запроса: {e}"
 
-    if resp.status_code == 200:
-        resp_json = resp.json()
-        if "choices" in resp_json and len(resp_json["choices"]) > 0:
-            raw_description = resp_json["choices"][0]["message"]["content"]
-
-            # Теперь прогоняем через обычную ask_io_net для сокращения
-            summary_prompt = (
-                "Сократи и перепиши этот текст анализа изображения, "
-                "оставив только важные детали. Сделай описание понятным и коротким:\n\n"
-                f"{raw_description}"
-            )
-            return ask_io_net(summary_prompt, user_id=user_id, use_prompt=True)
-        else:
-            return f"Vision: нет результата: {resp_json}"
+    if "choices" in resp_json and len(resp_json["choices"]) > 0:
+        raw_description = resp_json["choices"][0]["message"]["content"]
+        # Сжимаем текст через ask_io_net
+        summary_prompt = (
+            "Сократи и перепиши этот текст анализа изображения, "
+            "оставив только важные детали. Сделай описание понятным, коротким и структурированным:\n\n"
+            f"{raw_description}"
+        )
+        return ask_io_net(summary_prompt, user_id=user_id, use_prompt=True)
     else:
-        return f"Ошибочка Vision API: {resp.status_code} {resp.text}"
+        return f"Vision: нет результата: {resp_json}"
 
 # --- утилиты ---
 def list_models():

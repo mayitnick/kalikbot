@@ -129,18 +129,24 @@ def send_long_message(chat_id, text):
 
 @bot.message_handler(commands=["analyze"])
 def analyze_command(message):
+    # Проверяем, ответ ли это на сообщение с фото
+    if not message.reply_to_message or not message.reply_to_message.photo:
+        bot.reply_to(message, "Пожалуйста, используй команду, ответив на сообщение с изображением 📸")
+        return
+
     sent_msg = bot.reply_to(message, "Секундочку, анализирую изображение...")
 
-    # Проверяем, есть ли фото
-    if message.photo:
-        # Берём самое большое фото
-        photo = message.photo[-1]
-        file_id = photo.file_id
-        result = ai.analyze_image_file(file_id, user_id=message.from_user.id, bot=bot)
-        bot.edit_message_text(result, chat_id=message.chat.id, message_id=sent_msg.message_id)
-    else:
-        bot.edit_message_text("Пожалуйста, отправь команду вместе с изображением.", 
-                              chat_id=message.chat.id, message_id=sent_msg.message_id)
+    # Берём самое большое фото из оригинального сообщения
+    photo = message.reply_to_message.photo[-1]
+    file_id = photo.file_id
+
+    result = ai.analyze_image_file(file_id, user_id=message.from_user.id, bot=bot)
+
+    bot.edit_message_text(
+        result, 
+        chat_id=message.chat.id, 
+        message_id=sent_msg.message_id
+    )
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

@@ -122,6 +122,11 @@ def start(message):
 def ping_command(message):
     bot.reply_to(message, "🏓 Поньг~")
 
+def send_long_message(chat_id, text):
+    max_len = 4000  # чуть меньше лимита, чтобы с запасом
+    for i in range(0, len(text), max_len):
+        bot.send_message(chat_id, text[i:i+max_len])
+
 @bot.message_handler(content_types=["photo"])
 def analyze_with_caption(message):
     # проверяем, есть ли в подписи команда
@@ -159,7 +164,7 @@ def analyze_with_caption(message):
     if response.status_code == 200:
         try:
             result = response.json()["choices"][0]["message"]["content"]
-            bot.reply_to(message, "📷 Анализ:\n" + result)
+            send_long_message(message.chat.id, "📷 Анализ:\n" + result)
         except Exception as e:
             bot.reply_to(message, f"Ошибка обработки: {e}")
     else:

@@ -31,6 +31,7 @@ import re
 import importlib
 import pkgutil
 import commands
+import base64
 
 COMMANDS = []
 
@@ -120,6 +121,49 @@ def start(message):
 @bot.message_handler(commands=['ping'])
 def ping_command(message):
     bot.reply_to(message, "🏓 Поньг~")
+
+@bot.message_handler(content_types=["photo"])
+def analyze_with_caption(message):
+    # проверяем, есть ли в подписи команда
+    if not message.caption or not message.caption.startswith("/analyze"):
+        return  # игнорируем все фото без команды
+
+    # берём фото
+    file_id = message.photo[-1].file_id
+    file_info = bot.get_file(file_id)
+    file_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
+
+    img_data = requests.get(file_url).content
+    img_b64 = base64.b64encode(img_data).decode("utf-8")
+
+    # формируем запрос
+    url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {os.getenv('AI_TOKEN')}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
+        "messages": [
+            {"role": "system", "content": "You are an AI assistant."},
+            {"role": "user", "content": [
+                {"type": "text", "text": "Опиши это изображение."},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+            ]}
+        ]
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+
+    if response.status_code == 200:
+        try:
+            result = response.json()["choices"][0]["message"]["content"]
+            bot.reply_to(message, "📷 Анализ:\n" + result)
+        except Exception as e:
+            bot.reply_to(message, f"Ошибка обработки: {e}")
+    else:
+        bot.reply_to(message, f"Ошибка API: {response.status_code}\n{response.text}")
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

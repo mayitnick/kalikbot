@@ -265,6 +265,53 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
     else:
         return f"Ошибочка в API вышла: {resp.status_code} {resp.text}"
 
+def analyze_image(image_url: str, user_id: str, prompt: str = "Что на этом изображении?"):
+    """
+    Анализ изображения через vision-модель, затем сжатие текста через текстовую модель.
+    """
+    global AI_TOKEN
+    if not AI_TOKEN:
+        return "Ошибка: не установлен AI_TOKEN"
+
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {AI_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
+        "messages": [
+            {"role": "system", "content": "You are an AI assistant."},
+            {"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image_url}}
+            ]}
+        ]
+    }
+
+    try:
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+    except Exception as e:
+        return f"Ошибка vision-запроса: {e}"
+
+    if resp.status_code == 200:
+        resp_json = resp.json()
+        if "choices" in resp_json and len(resp_json["choices"]) > 0:
+            raw_description = resp_json["choices"][0]["message"]["content"]
+
+            # Теперь прогоняем через обычную ask_io_net для сокращения
+            summary_prompt = (
+                "Сократи и перепиши этот текст анализа изображения, "
+                "оставив только важные детали. Сделай описание понятным и коротким:\n\n"
+                f"{raw_description}"
+            )
+            return ask_io_net(summary_prompt, user_id=user_id, use_prompt=True)
+        else:
+            return f"Vision: нет результата: {resp_json}"
+    else:
+        return f"Ошибочка Vision API: {resp.status_code} {resp.text}"
+
 # --- утилиты ---
 def list_models():
     if not AI_TOKEN:

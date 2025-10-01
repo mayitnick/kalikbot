@@ -127,48 +127,29 @@ def send_long_message(chat_id, text):
     for i in range(0, len(text), max_len):
         bot.send_message(chat_id, text[i:i+max_len])
 
-@bot.message_handler(content_types=["photo"])
-def analyze_with_caption(message):
-    # проверяем, есть ли в подписи команда
-    if not message.caption or not message.caption.startswith("/analyze"):
-        return  # игнорируем все фото без команды
+@bot.message_handler(commands=['analyze'])
+def analyze_command(message):
+    if not message.reply_to_message or not message.reply_to_message.photo:
+        bot.reply_to(message, "Пришли мне фото командой /analyze (ответом на изображение) 🖼️")
+        return
 
-    # берём фото
-    file_id = message.photo[-1].file_id
-    file_info = bot.get_file(file_id)
-    file_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
+    try:
+        file_id = message.reply_to_message.photo[-1].file_id
+        file_info = bot.get_file(file_id)
+        image_url = f"https://api.telegram.org/file/bot{os.getenv('TOKEN')}/{file_info.file_path}"
 
-    img_data = requests.get(file_url).content
-    img_b64 = base64.b64encode(img_data).decode("utf-8")
+        sent_msg = bot.reply_to(message, "Анализирую изображение, хвостиком машу... ⌛")
 
-    # формируем запрос
-    url = "https://api.intelligence.io.solutions/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {os.getenv('AI_TOKEN')}",
-        "Content-Type": "application/json"
-    }
+        answer = ai.analyze_image(image_url, user_id=message.from_user.id)
 
-    data = {
-        "model": "meta-llama/Llama-3.2-90B-Vision-Instruct",
-        "messages": [
-            {"role": "system", "content": "You are an AI assistant."},
-            {"role": "user", "content": [
-                {"type": "text", "text": "Опиши это изображение."},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-            ]}
-        ]
-    }
+        bot.edit_message_text(
+            answer,
+            chat_id=message.chat.id,
+            message_id=sent_msg.message_id,
+        )
+    except Exception as e:
+        bot.reply_to(message, f"Ошибка анализа изображения: {e}")
 
-    response = requests.post(url, json=data, headers=headers)
-
-    if response.status_code == 200:
-        try:
-            result = response.json()["choices"][0]["message"]["content"]
-            send_long_message(message.chat.id, "📷 Анализ:\n" + result)
-        except Exception as e:
-            bot.reply_to(message, f"Ошибка обработки: {e}")
-    else:
-        bot.reply_to(message, f"Ошибка API: {response.status_code}\n{response.text}")
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

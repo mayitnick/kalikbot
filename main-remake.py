@@ -129,28 +129,40 @@ def send_long_message(chat_id, text):
 
 @bot.message_handler(commands=["analyze"])
 def analyze_command(message):
-    # Проверяем, что сообщение — ответ на другое сообщение с фото
-    if not message.reply_to_message or not message.reply_to_message.photo:
-        bot.reply_to(
-            message,
-            "Привет~! 🐾 Чтобы я описал изображение, ответь на само фото этой командой /analyze"
-        )
+    print("DEBUG: /analyze вызвана")  # Старт команды
+
+    # Проверяем, что сообщение — ответ на другое сообщение
+    if not message.reply_to_message:
+        bot.reply_to(message, "DEBUG: нет reply_to_message. Нужно ответить на фото.")
+        print("DEBUG: Сообщение не в ответ на фото")
         return
 
-    # Берём file_id самой большой версии фото
-    photo = message.reply_to_message.photo[-1]
-    file_id = photo.file_id
+    print(f"DEBUG: reply_to_message есть, content_type: {message.reply_to_message.content_type}")
+
+    # Ищем фото
+    if message.reply_to_message.photo:
+        photo = message.reply_to_message.photo[-1]
+        file_id = photo.file_id
+        print(f"DEBUG: найдено фото, file_id={file_id}, размеры: {photo.width}x{photo.height}")
+    elif message.reply_to_message.document and message.reply_to_message.document.mime_type.startswith("image/"):
+        file_id = message.reply_to_message.document.file_id
+        print(f"DEBUG: найден документ с изображением, file_id={file_id}")
+    else:
+        bot.reply_to(message, "DEBUG: не найдено фото или изображение в документе")
+        return
 
     sent_msg = bot.reply_to(message, "Ням-ням, анализирую изображение… ⏳")
 
     try:
-        # Используем ai.analyze_image_file
+        print("DEBUG: вызываем ai.analyze_image_file")
         description = ai.analyze_image_file(
             file_id=file_id,
             user_id=message.from_user.id,
             bot=bot,
             prompt="Что на этом изображении?"
         )
+        print(f"DEBUG: analyse_image_file вернула: {description[:100]}...")  # первые 100 символов
+
         if not description:
             description = "Упс… анализ занял слишком много времени. Попробуй прислать фото снова чуть позже ^_^"
 
@@ -159,12 +171,14 @@ def analyze_command(message):
             chat_id=sent_msg.chat.id,
             message_id=sent_msg.message_id
         )
+        print("DEBUG: сообщение с результатом отправлено")
     except Exception as e:
         bot.edit_message_text(
             f"Ошибка при анализе изображения: {e}",
             chat_id=sent_msg.chat.id,
             message_id=sent_msg.message_id
         )
+        print(f"DEBUG: исключение в analyze_command: {e}")
 
 @bot.message_handler(commands=['check'])
 def check_admin_rights(message):

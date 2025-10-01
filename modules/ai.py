@@ -267,25 +267,26 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
         return f"Ошибочка в API вышла: {resp.status_code} {resp.text}"
 
 def analyze_image_file(file_id: str, user_id: str, bot, prompt: str = "Что на этом изображении?"):
-    """
-    Анализ изображения из Telegram (file_id) через vision-модель,
-    затем сжатие текста через текстовую модель.
-    bot — твой объект TeleBot, чтобы получить file_path
-    """
+    print(f"DEBUG: analyze_image_file вызвана, file_id={file_id}, user_id={user_id}")
     global AI_TOKEN
     if not AI_TOKEN:
         return "Ошибка: не установлен AI_TOKEN"
 
     # Получаем file_path через Telegram API
     try:
+        print("DEBUG: получаем file_info через bot.get_file")
         file_info = bot.get_file(file_id)
         file_path = file_info.file_path
         file_url = f"https://api.telegram.org/file/bot{bot.token}/{file_path}"
+        print(f"DEBUG: file_url={file_url}")
+
         img_resp = requests.get(file_url)
         img_resp.raise_for_status()
         img_bytes = img_resp.content
         base64_image = base64.b64encode(img_bytes).decode("utf-8")
+        print(f"DEBUG: изображение получено, размер {len(img_bytes)} байт, base64 длина {len(base64_image)}")
     except Exception as e:
+        print(f"DEBUG: Ошибка при получении изображения из Telegram: {e}")
         return f"Ошибка при получении изображения из Telegram: {e}"
 
     headers = {
@@ -306,24 +307,34 @@ def analyze_image_file(file_id: str, user_id: str, bot, prompt: str = "Что н
     }
 
     try:
+        print("DEBUG: отправляем POST-запрос в Vision API")
         resp = requests.post(API_URL, headers=headers, json=payload, timeout=90)
         resp.raise_for_status()
         resp_json = resp.json()
+        print(f"DEBUG: ответ Vision API получен, keys={list(resp_json.keys())}")
     except requests.exceptions.Timeout:
+        print("DEBUG: vision-запрос превысил таймаут")
         return "Ошибка: vision-запрос превысил таймаут."
     except Exception as e:
+        print(f"DEBUG: Ошибка vision-запроса: {e}")
         return f"Ошибка vision-запроса: {e}"
 
     if "choices" in resp_json and len(resp_json["choices"]) > 0:
         raw_description = resp_json["choices"][0]["message"]["content"]
+        print(f"DEBUG: raw_description получен, первые 200 символов: {raw_description[:200]}...")
+
         # Сжимаем текст через ask_io_net
         summary_prompt = (
             "Сократи и перепиши этот текст анализа изображения, "
             "оставив только важные детали. Сделай описание понятным, коротким и структурированным:\n\n"
             f"{raw_description}"
         )
-        return ask_io_net(summary_prompt, user_id=user_id, use_prompt=True)
+        print("DEBUG: вызываем ask_io_net для сжатия текста")
+        compressed_text = ask_io_net(summary_prompt, user_id=user_id, use_prompt=True)
+        print(f"DEBUG: compressed_text получен, первые 200 символов: {compressed_text[:200]}...")
+        return compressed_text
     else:
+        print(f"DEBUG: Vision: нет результата: {resp_json}")
         return f"Vision: нет результата: {resp_json}"
 
 # --- утилиты ---

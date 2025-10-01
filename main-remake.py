@@ -150,65 +150,73 @@ def check_admin_rights(message):
         print("Походу, у бота нет прав администратора в этом чате.")
     bot.send_message(chat_id, "Я проверил все модули, и вывел в консоль :)")
 
-def memory_module(message):    # --- простые команды управления памятью ---
-    text = message.text.lower()
-    # команды видны в группе/личке, работают для автора (или для чата, если указан ключ)
-    if text.startswith("/showmem"):
-        user_mem = ai.show_memory(message.from_user.id)
-        if not user_mem:
-            bot.reply_to(message, "Память пользователя пустая~ (｡･ω･｡)")
-        else:
-            # нумеруем факты
-            lines = [f"{i}. {fact}" for i, fact in enumerate(user_mem)]
-            bot.reply_to(message, "Личная память:\n" + "\n".join(lines))
-        return True
+# --- команды для управления памятью ---
 
-    if text.startswith("/showchatmem"):
-        chat_mem = ai.show_chat_memory(message.chat.id)
-        if not chat_mem:
-            bot.reply_to(message, "Память чата пустая~")
-        else:
-            lines = [f"{i}. {fact}" for i, fact in enumerate(chat_mem)]
-            bot.reply_to(message, "Память этого чата:\n" + "\n".join(lines))
-        return True
+# показать личную память
+@bot.message_handler(commands=["showmem"])
+def showmem(message):
+    user_mem = ai.show_memory(message.from_user.id)
+    if not user_mem:
+        bot.reply_to(message, "Память пользователя пустая~ (｡･ω･｡)")
+    else:
+        lines = [f"{i}. {fact}" for i, fact in enumerate(user_mem)]
+        bot.reply_to(message, "Личная память:\n" + "\n".join(lines))
 
-    # /forget N  — удалить факт N у пользователя
-    if text.startswith("/forget "):
-        parts = text.split(maxsplit=1)
-        arg = parts[1].strip()
-        # если аргумент это число — удаляем по индексу личную память
-        if arg.isdigit():
-            idx = int(arg)
-            removed = ai.forget_memory(message.from_user.id, idx)
-            if removed:
-                bot.reply_to(message, f"Удалил из памяти: {removed}")
-            else:
-                bot.reply_to(message, "Не нашёл факт с таким индексом.")
-            return True
-        else:
-            # если не число — удалить по тексту
-            removed_list = ai.forget_memory_by_text(message.from_user.id, arg)
-            if removed_list:
-                bot.reply_to(message, "Удалил факты:\n" + "\n".join(removed_list))
-            else:
-                bot.reply_to(message, "Не нашёл фактов, содержащих этот текст.")
-            return True
 
-    if text.startswith("/resetmem"):
-        ok = ai.reset_memory(message.from_user.id)
-        if ok:
-            bot.reply_to(message, "Личная память очищена~")
-        else:
-            bot.reply_to(message, "Память и так пуста.")
-        return True
+# показать память чата
+@bot.message_handler(commands=["showchatmem"])
+def showchatmem(message):
+    chat_mem = ai.show_chat_memory(message.chat.id)
+    if not chat_mem:
+        bot.reply_to(message, "Память чата пустая~")
+    else:
+        lines = [f"{i}. {fact}" for i, fact in enumerate(chat_mem)]
+        bot.reply_to(message, "Память этого чата:\n" + "\n".join(lines))
 
-    if text.startswith("/resetchatmem"):
-        ok = ai.reset_chat_memory(message.chat.id)
-        if ok:
-            bot.reply_to(message, "Память чата очищена~")
+
+# забыть факт по индексу или тексту
+@bot.message_handler(commands=["forget"])
+def forget(message):
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        bot.reply_to(message, "Укажи, что забыть: индекс или текст~")
+        return
+
+    arg = args[1].strip()
+    if arg.isdigit():
+        idx = int(arg)
+        removed = ai.forget_memory(message.from_user.id, idx)
+        if removed:
+            bot.reply_to(message, f"Удалил из памяти: {removed}")
         else:
-            bot.reply_to(message, "Память чата и так пуста.")
-        return True
+            bot.reply_to(message, "Не нашёл факт с таким индексом.")
+    else:
+        removed_list = ai.forget_memory_by_text(message.from_user.id, arg)
+        if removed_list:
+            bot.reply_to(message, "Удалил факты:\n" + "\n".join(removed_list))
+        else:
+            bot.reply_to(message, "Не нашёл фактов, содержащих этот текст.")
+
+
+# сбросить личную память
+@bot.message_handler(commands=["resetmem"])
+def resetmem(message):
+    ok = ai.reset_memory(message.from_user.id)
+    if ok:
+        bot.reply_to(message, "Личная память очищена~")
+    else:
+        bot.reply_to(message, "Память и так пуста.")
+
+
+# сбросить память чата
+@bot.message_handler(commands=["resetchatmem"])
+def resetchatmem(message):
+    ok = ai.reset_chat_memory(message.chat.id)
+    if ok:
+        bot.reply_to(message, "Память чата очищена~")
+    else:
+        bot.reply_to(message, "Память чата и так пуста.")
+
 
 # Сделаем обработчик для всех сообщений
 @bot.message_handler(func=lambda message: True)
@@ -227,10 +235,6 @@ def message_listener(message):
     
 def kalik(message):
     text = message.text.lower()
-    
-    # Мне было в падлу делать отдельные команды, поэтому оно так
-    if memory_module(message):
-        return
     
     """contains_profanity = bool(profanity_regex.search(text))
     if contains_profanity:

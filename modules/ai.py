@@ -259,6 +259,13 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
                 if len(hist) > 200:
                     hist = hist[-200:]
                 conversation_history[dm_key] = hist
+            think_blocks = re.findall(r"<think>(.*?)</think>", answer, flags=re.S)
+            if think_blocks:
+                # Удаляем мысли из текста
+                answer = re.sub(r"<think>.*?</think>", "", answer, flags=re.S).strip()
+            elif "<think>" in answer and "</think>" not in answer:
+                # Если мысль началась, но не закончилась
+                return "я немного подлагнул, попробуй ещё раз~"
 
             return answer
         else:

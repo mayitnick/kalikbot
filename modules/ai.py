@@ -146,7 +146,7 @@ def _save_memory():
         pass
 
 # --- API ---
-def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = True, max_tokens: int = 700):
+def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = True, max_tokens: int = 1700):
     """
     text — сообщение от пользователя.
     user_id — id пользователя (для отдельной памяти).

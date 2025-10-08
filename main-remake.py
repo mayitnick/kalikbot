@@ -41,7 +41,7 @@ def send_to_ai(message):
         sent_msg = bot.reply_to(message, "Секу, дай подумать...")
 
         # передаём message.chat.id в ai
-        answer = ai.ask_io_net(text, user_id=message.from_user.id, chat_id=message.chat.id)
+        answer = ai.ask_io_net(text.replace('--force', ''), user_id=message.from_user.id, chat_id=message.chat.id)
 
         if not answer.strip():
             answer = "(завис... попробуй ещё раз?) (・・ )?"
@@ -301,7 +301,7 @@ def kalik(message):
         return"""
     
     if "--force" in text:
-        send_to_ai(message.replace('--force', ''))
+        send_to_ai(message)
         return
     
     # 1. Сначала проверяем чистый зов

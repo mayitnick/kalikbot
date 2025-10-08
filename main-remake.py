@@ -300,6 +300,10 @@ def kalik(message):
         bot.reply_to(message, "Я не люблю маты! 😡")
         return"""
     
+    if "--force" in text:
+        send_to_ai(message.replace('--force', ''))
+        return
+    
     # 1. Сначала проверяем чистый зов
     from commands import call
     if call.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID):

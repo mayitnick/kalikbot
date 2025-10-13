@@ -19,6 +19,12 @@ def get_schedule(day: int, group_id: int):
         return None
     
     lessons = [p.get_text(strip=True) for p in schedule_div.find_all('p')]
+    
+    # Модификация для понедельника
+    if day == 1 and lessons:
+        first_lesson = lessons[0]
+        lessons[0] = "Классный час"
+        lessons.append(first_lesson)
     return lessons
 
 def main():
@@ -68,10 +74,7 @@ name_to_id_dict = {
 }
 
 def name_to_id(name):
-    if name in name_to_id_dict:
-        return name_to_id_dict[name]
-    else:
-        return None
+    return name_to_id_dict.get(name)
 
 if __name__ == "__main__":
     main()

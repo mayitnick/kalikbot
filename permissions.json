@@ -13,5 +13,9 @@
     "elder": [
         "give.student",
         "duty.reroll"
+    ],
+    "student": [
+        "schedule.view",
+        "double.view"
     ]
 }

@@ -1,9 +1,5 @@
 <p align="center"> <img src="pictures/header.png"> </p>
 
-<p align="center"> <img src="pictures/spacer.png"> </p>
-
-<p align="center"> <img src="pictures/information.png"> </p>
-
 Привет! 👋  
 **Kalik** — это Telegram-бот, созданный для упрощения студенческой жизни.  
 Проект активно развивается 🚀 и впереди ещё много крутых функций!
@@ -15,8 +11,6 @@
 ## 🛠️ Технологии
 - 🐍 **Python**
 - 📦 [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)
-
-<p align="center"> <img src="pictures/spacer.png"> </p>
 
 <p align="center"> <img src="pictures/setup.png"> </p>
 

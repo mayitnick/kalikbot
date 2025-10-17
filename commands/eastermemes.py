@@ -17,6 +17,7 @@ def handle(
     
     print("Fetching meme...")
     data = requests.get("https://meme-api.com/gimme/Pikabu")
+    print("Meme data received.")
     
     """
     Пример выводимых данных:
@@ -40,7 +41,11 @@ def handle(
     }
     """
     
+    print("Processing meme data...")
     if data.status_code == 200:
+        if data.json() is None:
+            bot.reply_to(message, "Не удалось получить мем, попробуй ещё раз позже!")
+            return False
         meme_json = data.json()
         # нужно как то получить картинку с ссылки и отправить в чат
         meme_url = meme_json.get("url")
@@ -52,5 +57,6 @@ def handle(
                 bot.send_photo(message.chat.id, meme_url)
     else:
         bot.reply_to(message, "Не удалось получить мем, попробуй ещё раз позже!")
+    print("Meme sent.")
     return True  # сигнал, что команда сработала
     # я хезе, это не везде есть, но мне в падлу это проверять :3

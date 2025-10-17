@@ -13,25 +13,18 @@
 
 # Импортируем необходимые библиотеки
 from telebot import types, TeleBot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-import modules.gloris_integration as gloris
 import modules.permissions as permissions
 import modules.constants as constants
 import modules.ai as ai
 from dotenv import load_dotenv
 from datetime import datetime
-from datetime import timedelta
-import traceback
 import requests
 import database
-import random
-import time
 import os
 import re
 import importlib
 import pkgutil
 import commands
-import base64
 
 COMMANDS = []
 

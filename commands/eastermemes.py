@@ -5,7 +5,7 @@ from modules.constants import CONSTANTS
 import database
 import requests
 
-ALIASES = ["мем"]
+ALIASES = ["meme"]
 
 def handle(
     message: Message,
@@ -15,6 +15,7 @@ def handle(
     CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,) -> bool:
     
+    print("Fetching meme...")
     data = requests.get("https://meme-api.com/gimme/Pikabu")
     
     """
@@ -51,7 +52,5 @@ def handle(
                 bot.send_photo(message.chat.id, meme_url)
     else:
         bot.reply_to(message, "Не удалось получить мем, попробуй ещё раз позже!")
-    
-    bot.reply_to(message, "Всегда отдавай честь брату инженера!")
     return True  # сигнал, что команда сработала
     # я хезе, это не везде есть, но мне в падлу это проверять :3

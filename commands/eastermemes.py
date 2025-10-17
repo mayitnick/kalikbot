@@ -16,7 +16,14 @@ def handle(
     FOUNDER_ID: int,) -> bool:
     
     print("Fetching meme...")
-    data = requests.get("https://meme-api.com/gimme/Pikabu")
+    try:
+        data = requests.get("https://meme-api.com/gimme/Pikabu", timeout=5)
+    except requests.exceptions.Timeout:
+        bot.reply_to(message, "Мемы слишком долго грузятся! Попробуй позже.")
+        return False
+    except requests.exceptions.RequestException as e:
+        bot.reply_to(message, f"Ошибка получения мема: {e}")
+        return False
     print("Meme data received.")
     
     """

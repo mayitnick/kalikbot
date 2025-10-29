@@ -208,7 +208,7 @@ def ask_io_net(text: str, user_id: str, chat_id: str = None, use_prompt: bool = 
     }
 
     try:
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        resp = requests.post(API_URL, headers=headers, json=payload, timeout=200)
     except Exception as e:
         return f"Ошибка запроса к API: {e}"
 

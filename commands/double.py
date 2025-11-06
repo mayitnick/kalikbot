@@ -1,17 +1,13 @@
 from telebot import TeleBot
-from telebot.types import Message
+from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 import modules.permissions as permissions
 import database
 from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
 
+
 def _split_pairs_to_lesson_slots(pair_times):
-    """
-    Разбивает список пар (из БД) на поурочные слоты (примерно по 45 минут).
-    Если пара 90 мин -> два слота, если 45 мин -> один слот.
-    Возвращает список (start_time, end_time).
-    """
     slots = []
     for p in pair_times:
         start_str, end_str = p.split("-")
@@ -30,14 +26,10 @@ def _split_pairs_to_lesson_slots(pair_times):
 
 def get_current_status(pair_times, lessons):
     """
-    pair_times: ["8:20-9:50", "10:00-11:30", ...]  # блоками, как в БД
-    lessons: ["Физика", "Физика", "Математика", ...]  # поурочно, из Gloris
-
     Возвращает:
       ("before", idx, minutes, subject)
       ("lesson", idx, minutes, subject)
-      ("break", idx, minutes, subject)
-      ("lunch", idx, minutes, "ОБЕД")
+      ("rest", idx, minutes, subject)  # объединено break + lunch
       ("after", None, None, None)
     """
     now_dt = datetime.now()
@@ -47,7 +39,6 @@ def get_current_status(pair_times, lessons):
     if not lesson_slots:
         return "after", None, None, None
 
-    # до начала дня
     first_start = lesson_slots[0][0]
     if now_time < first_start:
         until = int((datetime.combine(datetime.today(), first_start) - now_dt).total_seconds() // 60)
@@ -56,12 +47,11 @@ def get_current_status(pair_times, lessons):
     for idx, (start, end) in enumerate(lesson_slots):
         if start <= now_time <= end:
             subject = lessons[idx] if idx < len(lessons) else "?"
-
-            if subject.upper().startswith("ОБЕД"):
+            if "ОБЕД" in subject.upper():
                 remaining = int((datetime.combine(datetime.today(), end) - now_dt).total_seconds() // 60)
-                return "lunch", idx + 1, remaining, "ОБЕД"
+                return "rest", idx + 1, remaining, "ОБЕД"
 
-            # ищем стак одинаковых предметов
+            # ищем конец блока одинаковых уроков
             j = idx
             while j + 1 < len(lessons) and lessons[j + 1] == subject:
                 j += 1
@@ -73,14 +63,15 @@ def get_current_status(pair_times, lessons):
         if now_time < start:
             until = int((datetime.combine(datetime.today(), start) - now_dt).total_seconds() // 60)
             next_subj = lessons[idx] if idx < len(lessons) else "?"
-            if next_subj.upper().startswith("ОБЕД"):
-                return "lunch", idx + 1, until, "ОБЕД"
-            return "break", idx + 1, until, next_subj
+            if "ОБЕД" in next_subj.upper():
+                return "rest", idx + 1, until, "ОБЕД"
+            return "rest", idx + 1, until, next_subj
 
     return "after", None, None, None
 
 
 ALIASES = ["пара"]
+
 
 def handle(
     message: Message,
@@ -103,24 +94,78 @@ def handle(
     lessons = gloris.get_schedule(date, group_id)
 
     status, num, remaining, subject = get_current_status(schedule_times, lessons)
+    remaining = (remaining or 0) + 1
 
-    remaining += 1
+    # создаём кнопку
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton("Узнать следующий урок 📘", callback_data="next_lesson"))
 
+    # основной ответ
     if status == "before":
         hours, minutes = divmod(remaining, 60)
         if hours > 0:
-            bot.reply_to(message, f"Учебный день ещё впереди 🌸 Первая пара — {subject}, начнётся через {hours} ч {minutes} мин ⏳")
+            bot.send_message(
+                chat_id,
+                f"Учебный день ещё впереди 🌸 Первая пара — {subject}, начнётся через {hours} ч {minutes} мин ⏳",
+                reply_markup=markup,
+            )
         else:
-            bot.reply_to(message, f"До встречи с {subject} осталось {remaining} минут 🌿✨")
+            bot.send_message(
+                chat_id,
+                f"До встречи с {subject} осталось {remaining} минут 🌿✨",
+                reply_markup=markup,
+            )
 
     elif status == "lesson":
-        bot.reply_to(message, f"Сейчас идёт {num}-й урок ({subject}), он закончится через {remaining} минут 🕒~ потерпи немножко >w<")
+        bot.send_message(
+            chat_id,
+            f"Сейчас идёт {num}-й урок ({subject}), он закончится через {remaining} минут 🕒~ потерпи немножко >w<",
+            reply_markup=markup,
+        )
 
-    elif status == "break":
-        bot.reply_to(message, f"Сейчас переменка ✨ До {num}-го урока ({subject}) осталось {remaining} минуточек ⏳")
-
-    elif status == "lunch":
-        bot.reply_to(message, f"Сейчас обед 🍎✨ Отдыхай, у тебя есть {remaining} минут!")
+    elif status == "rest":
+        next_subj = subject if subject != "ОБЕД" else lessons[num] if num < len(lessons) else None
+        if next_subj:
+            bot.send_message(
+                chat_id,
+                f"Сейчас переменка ✨ Следующий урок — {next_subj}. До него {remaining} минуточек ⏳",
+                reply_markup=markup,
+            )
+        else:
+            bot.send_message(
+                chat_id,
+                f"Сейчас отдых 🌿✨ У тебя есть {remaining} минут перед следующим занятием.",
+                reply_markup=markup,
+            )
 
     else:
-        bot.reply_to(message, "Учебный день уже закончился 🌙")
+        bot.send_message(chat_id, "Учебный день уже закончился 🌙", reply_markup=markup)
+
+
+# обработчик callback'а
+def handle_callback(bot: TeleBot):
+    @bot.callback_query_handler(func=lambda call: call.data == "next_lesson")
+    def next_lesson(call):
+        chat_id = call.message.chat.id
+        db = database.Database()
+        group = db.get_group_by_tg_group_id(chat_id)
+        if not group:
+            bot.answer_callback_query(call.id, "Группа не найдена")
+            return
+
+        group_id = group["gloris_id"]
+        date = datetime.weekday(datetime.now()) + 1
+        lessons = gloris.get_schedule(date, group_id)
+
+        schedule_times = db.get_schedule()
+        lesson_slots = _split_pairs_to_lesson_slots(schedule_times)
+
+        now_time = datetime.now().time()
+        for idx, (start, _) in enumerate(lesson_slots):
+            if now_time < start and idx < len(lessons):
+                bot.answer_callback_query(call.id)
+                bot.send_message(chat_id, f"Следующий урок — {lessons[idx]} 🧠✨")
+                return
+
+        bot.answer_callback_query(call.id)
+        bot.send_message(chat_id, "Больше уроков на сегодня нет 🌙✨")

@@ -25,6 +25,7 @@ import re
 import importlib
 import pkgutil
 import commands
+from commands import double
 
 COMMANDS = []
 
@@ -313,6 +314,8 @@ def kalik(message):
     # Раньше бот не знал что делать, а теперь, мы отправляем нейросетке сообщение >:3
     send_to_ai(message)
 
+double.handle_callback(bot)
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     data = call.data
@@ -321,7 +324,6 @@ def callback_inline(call):
             group_name = data.split(".")[1]
             group = db.get_group_by_name(group_name)
             # Доделать надо, я спать :|
-
 
 me = bot.get_me()
 print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")

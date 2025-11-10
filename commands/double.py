@@ -5,6 +5,7 @@ import database
 from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
+import modules.statistics as stat
 
 
 def _split_pairs_to_lesson_slots(pair_times):
@@ -101,6 +102,7 @@ def handle(
     markup.add(InlineKeyboardButton("Узнать следующий урок 📘", callback_data="next_lesson"))
 
     # основной ответ
+    stat.add_statistic("double")
     if status == "before":
         hours, minutes = divmod(remaining, 60)
         if hours > 0:

@@ -127,7 +127,7 @@ def handle(
         print(message.chat.id, f" type={type(message.chat.id)}")
         if message.chat.id == int("-1002949492641"):
             if "химия" in subject.lower():
-                bot.send_message("Это ведь химия, да?")
+                bot.send_sticker(chat_id, "CAACAgIAAxkBAAE9z6hpFskbbeY6lSc4R_QgOnRbwkROcgACEIoAArNmkEiIvsF6U330LDYE")
 
     elif status == "rest":
         next_subj = subject if subject != "ОБЕД" else lessons[num] if num < len(lessons) else None

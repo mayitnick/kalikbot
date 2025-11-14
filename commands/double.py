@@ -170,7 +170,7 @@ def handle_callback(bot: TeleBot):
         for idx, (start, _) in enumerate(lesson_slots):
             if now_time < start and idx < len(lessons):
                 bot.answer_callback_query(call.id)
-                bot.send_message(chat_id, f"Следующий урок — {lessons[idx]} 🧠✨")
+                bot.send_message(chat_id, f"{callback.from_user.first_name} нажал на кнопку\nСледующий урок — {lessons[idx]} 🧠✨")
                 return
 
         bot.answer_callback_query(call.id)

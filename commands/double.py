@@ -124,6 +124,8 @@ def handle(
             f"Сейчас идёт {num}-й урок ({subject}), он закончится через {remaining} минут 🕒~ потерпи немножко >w<",
             reply_markup=markup,
         )
+        if message.chat.id == "-1002949492641":
+            print("test")
 
     elif status == "rest":
         next_subj = subject if subject != "ОБЕД" else lessons[num] if num < len(lessons) else None

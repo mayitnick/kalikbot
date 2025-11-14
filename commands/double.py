@@ -125,8 +125,8 @@ def handle(
             reply_markup=markup,
         )
         print(message.chat.id, f" type={type(message.chat.id)}")
-        if message.chat.id == "-1002949492641":
-            print("test")
+        if message.chat.id == int("-1002949492641"):
+            bot.send_message(chat_id, "это группа Цирк, скоро будут стики!")
 
     elif status == "rest":
         next_subj = subject if subject != "ОБЕД" else lessons[num] if num < len(lessons) else None

@@ -124,7 +124,7 @@ def handle(
             f"Сейчас идёт {num}-й урок ({subject}), он закончится через {remaining} минут 🕒~ потерпи немножко >w<",
             reply_markup=markup,
         )
-        print(message.chat.id)
+        print(message.chat.id, f" type={type(message.chat.id)}")
         if message.chat.id == "-1002949492641":
             print("test")
 

@@ -7,6 +7,7 @@ from typing import Any, Dict
 from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 import traceback
+import double
 
 ALIASES = ["распис"]
 
@@ -74,14 +75,21 @@ def handle(message: Message, bot: TeleBot, db: database.Database,
 
     # Получаем расписание
     try:
-        schedule = gloris.get_schedule(day, group_id)
-        if schedule:
-            bot.reply_to(message,
-                         f"<b>Расписание на {day_name}:</b>\n" + "\n".join(schedule),
-                         parse_mode="HTML")
+        lessons = gloris.get_schedule(day, group_id)
+        times = db.get_schedule()  # берём блоки времени
+        lesson_slots = double._split_pairs_to_lesson_slots(times)
+
+        if lessons and lesson_slots:
+            msg_lines = [f"**Расписание на {day_name}:**\n"]
+            for idx, subj in enumerate(lessons):
+                start, end = lesson_slots[idx] if idx < len(lesson_slots) else ("?", "?")
+                # форматируем красиво
+                line = f"```{subj}ㅤ({CONSTANTS.lesson_length.get(subj, '')})\n  • {start.strftime('%H:%M')}-{end.strftime('%H:%M')}```"
+                msg_lines.append(line)
+            bot.reply_to(message, "\n".join(msg_lines), parse_mode="MARKDOWNV2")
         else:
             bot.reply_to(message, CONSTANTS.schedule_not_found)
     except Exception:
         traceback.print_exc()
-        bot.reply_to(message, CONSTANTS.error +
-                     " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")
+        bot.reply_to(message, CONSTANTS.error + 
+                    " Подсказка: надо писать в формате \"Калик, расписание группа деньнедели\"")

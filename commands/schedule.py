@@ -84,6 +84,7 @@ def handle(message: Message, bot: TeleBot, db: database.Database,
             for idx, subj in enumerate(lessons):
                 start, end = lesson_slots[idx] if idx < len(lesson_slots) else ("?", "?")
                 # форматируем красиво
+                subj.replace(" ", "ㅤ")
                 line = f"```{subj}\n  • {start.strftime('%H:%M')}-{end.strftime('%H:%M')}```"
                 msg_lines.append(line)
             bot.reply_to(message, "\n".join(msg_lines), parse_mode="MARKDOWNV2")

@@ -7,7 +7,7 @@ from typing import Any, Dict
 from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 import traceback
-import double
+from commands import double
 
 ALIASES = ["распис"]
 

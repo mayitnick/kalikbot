@@ -80,7 +80,7 @@ def handle(message: Message, bot: TeleBot, db: database.Database,
             bot.reply_to(message,
                          f"<b>Расписание на {day_name}:</b>\n" + 
                          "\n".join(schedule) + 
-                         f"\n\n<i>- {status}</i>",
+                         f"\n\n<i>{status}</i>",
                          parse_mode="HTML")
         else:
             bot.reply_to(message, CONSTANTS.schedule_not_found)

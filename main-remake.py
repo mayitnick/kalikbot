@@ -116,7 +116,7 @@ def start(message):
 def ping_command(message):
     bot.reply_to(message, "🏓 Поньг~")
     
-@bot.message_handler(commands=['-'])
+@bot.message_handler(commands=['0'])
 def delmes_command(message: types.Message):
     reply_message = message.reply_to_message
     author_id = message.from_user.id

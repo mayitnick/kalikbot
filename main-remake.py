@@ -122,7 +122,7 @@ def delmes_command(message: types.Message):
     author_id = message.from_user.id
     bot.delete_message(message.chat.id, message.id)
     if reply_message and author_id == int(FOUNDER_ID):
-        bot.delete_message(message.chat.id, message.id)
+        bot.delete_message(message.chat.id, reply_message.id)
     
 
 def send_long_message(chat_id, text):

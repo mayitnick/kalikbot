@@ -25,7 +25,7 @@ def handle(
     CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,) -> bool:
 
-    bot.reply_to(message, f"До конца пар осталось: {get_time_until_target_simple}")
+    bot.reply_to(message, f"До конца пар осталось: {get_time_until_target_simple()}")
     
     
     return True  # сигнал, что команда сработала

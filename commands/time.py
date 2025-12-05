@@ -15,7 +15,7 @@ def get_time_until_target_simple():
         target += timedelta(days=1)
     diff = target - now
     s = int(diff.total_seconds())
-    return f"{s // 3600} часов {(s % 3600) // 60} минут {s % 60} секунд"
+    return f"{s // 3600} ч {(s % 3600) // 60} м"
 
 def handle(
     message: Message,
@@ -25,7 +25,8 @@ def handle(
     CONSTANTS: CONSTANTS,
     FOUNDER_ID: int,) -> bool:
 
-    bot.reply_to(message, f"До конца пар осталось: {get_time_until_target_simple()}")
+    bot.reply_to(message, 
+        f"```Осталось: {get_time_until_target_simple()}\n1. 8:20 - 9:05\n2. 9:05 - 9:50\n3. 10:00 - 10:45\n4. 10:45 - 11:30\n5. 11:35 - 12:20\n6. 12:25 - 13:10\n7. 13:15 - 14:00\n8. 14:00 - 14:45\n9. 14:50 - 15:35\n10. 15:40 - 16:25\n```")
     
     
     return True  # сигнал, что команда сработала

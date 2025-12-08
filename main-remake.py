@@ -302,15 +302,10 @@ def handle_reaction(reaction):
     old_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.old_reaction]
     new_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.new_reaction]
     
-    reactions_info = f"Старые реакции: {old_reactions}
-Новые реакции: {new_reactions}"
+    reactions_info = f"Старые реакции: {old_reactions}\nНовые реакции: {new_reactions}"
     
     # Вывод всей информации
-    info = f"{chat_info}
-{message_info}
-{user_info}
-{date_info}
-{reactions_info}"
+    info = f"{chat_info}\n{message_info}\n{user_info}\n{date_info}\n{reactions_info}"
     print(info)
     bot.send_message(reaction.chat.id, info)
 

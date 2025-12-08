@@ -286,6 +286,8 @@ def message_listener(message):
     # Запоминаем =3
     author = message.from_user
     last_name = author.last_name
+    if author.id == 8539187812:
+        bot.delete_message(message.chat.id, message.id)
     if not last_name:
         last_name = ""
     if not db.get_user_by_id(author.id):

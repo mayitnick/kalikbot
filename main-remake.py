@@ -279,6 +279,51 @@ def resetchatmem(message):
     else:
         bot.reply_to(message, "Память чата и так пуста.")
 
+@bot.message_reaction_handler(func=lambda m: True)
+def handle_reaction(reaction):
+    # Информация о чате
+    chat_info = f"Чат: {reaction.chat.title} (ID: {reaction.chat.id})"
+    
+    # ID сообщения
+    message_info = f"Сообщение: {reaction.message_id}"
+    
+    # Кто поставил реакцию (если не аноним)
+    user_info = f"Пользователь: {reaction.user.first_name} {reaction.user.last_name} (ID: {reaction.user.id})" if reaction.user else "Пользователь: Аноним"
+    
+    # Если реакция анонимная, но есть actor_chat
+    if not reaction.user and reaction.actor_chat:
+        user_info = f"Чат (аноним): {reaction.actor_chat.title} (ID: {reaction.actor_chat.id})"
+    
+    # Дата
+    from datetime import datetime
+    date_info = f"Дата: {datetime.fromtimestamp(reaction.date)}"
+    
+    # Старые и новые реакции
+    old_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.old_reaction]
+    new_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.new_reaction]
+    
+    reactions_info = f"Старые реакции: {old_reactions}
+Новые реакции: {new_reactions}"
+    
+    # Вывод всей информации
+    info = f"{chat_info}
+{message_info}
+{user_info}
+{date_info}
+{reactions_info}"
+    print(info)
+    bot.send_message(reaction.chat.id, info)
+
+    # Проверка: если автор — нужный ID и реакция 🙊, удаляем сообщение
+    if reaction.user and reaction.user.id == 1408266288:
+        for r in reaction.new_reaction:
+            if hasattr(r, 'emoji') and r.emoji == '🙊':
+                try:
+                    bot.delete_message(reaction.chat.id, reaction.message_id)
+                    bot.send_message(reaction.chat.id, "Сообщение удалено по правилам.")
+                except Exception as e:
+                    print(f"Ошибка при удалении сообщения: {e}")
+                break
 
 # Сделаем обработчик для всех сообщений
 @bot.message_handler(func=lambda message: True)

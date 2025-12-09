@@ -331,7 +331,7 @@ def message_listener(message):
 
     print(f"DEBUG: {author.id} {type(author.id)} {message.text}")
     
-    if chat_type == "group" or chat_type == "super_group":
+    if chat_type == "group" or chat_type == "supergroup":
         print(f"Кажется, это в группе пишут. ({chat_type})")
     
     if author.id == 8539187812:

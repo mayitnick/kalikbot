@@ -326,7 +326,14 @@ def message_listener(message):
     # Запоминаем =3
     author = message.from_user
     last_name = author.last_name
+    chat = message.chat
+    chat_type = chat.type
+
     print(f"DEBUG: {author.id} {type(author.id)} {message.text}")
+    
+    if chat_type == "group" or chat_type == "super_group":
+        print(f"Кажется, это в группе пишут. ({chat_type})")
+    
     if author.id == 8539187812:
         bot.delete_message(message.chat.id, message.id)
     if not last_name:

@@ -342,6 +342,14 @@ def message_listener(message):
         db.add_user(telegram_id=author.id,
                     telegram_username=author.username,
                     full_name=author.first_name + last_name)
+    if chat_type == "group" or chat_type == "supergroup":
+        # Заглушка
+        user = db.get_user_by_id(author.id)
+        group = get_group_by_id(chat.id)
+        if group:
+            db.upgrade_to_student(author.id, group["group"])
+            db.add_student(group["group"], author.id)
+            
     if check_for_kalik(message):
         kalik(message)
     

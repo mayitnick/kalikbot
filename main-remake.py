@@ -345,7 +345,7 @@ def message_listener(message):
     if chat_type == "group" or chat_type == "supergroup":
         # Заглушка
         user = db.get_user_by_id(author.id)
-        group = get_group_by_id(chat.id)
+        group = db.get_group_by_id(chat.id)
         if group:
             db.upgrade_to_student(author.id, group["group"])
             db.add_student(group["group"], author.id)

@@ -7,53 +7,53 @@ import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
 
 
-def _split_pairs_to_lesson_slots(pair_times):
+def _split_pairs_to_lesson_slots(pair_times, lessons):
     slots = []
-    for p in pair_times:
+    slot_subjects = []
+
+    for idx, p in enumerate(pair_times):
         start_str, end_str = p.split("-")
         start_dt = datetime.strptime(start_str.strip(), "%H:%M")
         end_dt = datetime.strptime(end_str.strip(), "%H:%M")
         duration_min = int((end_dt - start_dt).total_seconds() // 60)
+        subject = lessons[idx] if idx < len(lessons) else "?"
 
         if duration_min >= 80:  # сдвоенная пара
             first_end = start_dt + timedelta(minutes=45)
             slots.append((start_dt.time(), first_end.time()))
+            slot_subjects.append(subject)
             slots.append((first_end.time(), end_dt.time()))
+            slot_subjects.append(subject)
         else:
             slots.append((start_dt.time(), end_dt.time()))
-    return slots
+            slot_subjects.append(subject)
+
+    return slots, slot_subjects
 
 
 def get_current_status(pair_times, lessons):
-    """
-    Возвращает:
-      ("before", idx, minutes, subject)
-      ("lesson", idx, minutes, subject)
-      ("rest", idx, minutes, subject)  # объединено break + lunch
-      ("after", None, None, None)
-    """
     now_dt = datetime.now()
     now_time = now_dt.time()
 
-    lesson_slots = _split_pairs_to_lesson_slots(pair_times)
+    lesson_slots, slot_subjects = _split_pairs_to_lesson_slots(pair_times, lessons)
     if not lesson_slots:
         return "after", None, None, None
 
     first_start = lesson_slots[0][0]
     if now_time < first_start:
         until = int((datetime.combine(datetime.today(), first_start) - now_dt).total_seconds() // 60)
-        return "before", 1, until, lessons[0]
+        return "before", 1, until, slot_subjects[0]
 
     for idx, (start, end) in enumerate(lesson_slots):
         if start <= now_time <= end:
-            subject = lessons[idx] if idx < len(lessons) else "?"
+            subject = slot_subjects[idx]
             if "ОБЕД" in subject.upper():
                 remaining = int((datetime.combine(datetime.today(), end) - now_dt).total_seconds() // 60)
                 return "rest", idx + 1, remaining, "ОБЕД"
 
             # ищем конец блока одинаковых уроков
             j = idx
-            while j + 1 < len(lessons) and lessons[j + 1] == subject:
+            while j + 1 < len(slot_subjects) and slot_subjects[j + 1] == subject:
                 j += 1
                 end = lesson_slots[j][1]
 
@@ -62,7 +62,7 @@ def get_current_status(pair_times, lessons):
 
         if now_time < start:
             until = int((datetime.combine(datetime.today(), start) - now_dt).total_seconds() // 60)
-            next_subj = lessons[idx] if idx < len(lessons) else "?"
+            next_subj = slot_subjects[idx]
             if "ОБЕД" in next_subj.upper():
                 return "rest", idx + 1, until, "ОБЕД"
             return "rest", idx + 1, until, next_subj

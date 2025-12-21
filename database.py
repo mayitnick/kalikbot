@@ -74,7 +74,7 @@ class Database:
             user["duty_info"] = None
 
         self.save()
-        print(f"Пользователь {user['first_name']} теперь {new_type}.")
+        print(f"Пользователь {user['full_name']} теперь {new_type}.")
         return user
 
     def get_user_by_id(self, telegram_id):

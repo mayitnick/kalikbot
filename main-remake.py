@@ -115,6 +115,15 @@ def start(message):
 @bot.message_handler(commands=['ping'])
 def ping_command(message):
     bot.reply_to(message, "🏓 Поньг~")
+    
+@bot.message_handler(commands=['0'])
+def delmes_command(message: types.Message):
+    reply_message = message.reply_to_message
+    author_id = message.from_user.id
+    bot.delete_message(message.chat.id, message.id)
+    if reply_message and author_id == int(FOUNDER_ID):
+        bot.delete_message(message.chat.id, reply_message.id)
+    
 
 def send_long_message(chat_id, text):
     max_len = 4000  # чуть меньше лимита, чтобы с запасом
@@ -270,6 +279,46 @@ def resetchatmem(message):
     else:
         bot.reply_to(message, "Память чата и так пуста.")
 
+@bot.message_reaction_handler(func=lambda m: True)
+def handle_reaction(reaction):
+    # Информация о чате
+    chat_info = f"Чат: {reaction.chat.title} (ID: {reaction.chat.id})"
+    
+    # ID сообщения
+    message_info = f"Сообщение: {reaction.message_id}"
+    
+    # Кто поставил реакцию (если не аноним)
+    user_info = f"Пользователь: {reaction.user.first_name} {reaction.user.last_name} (ID: {reaction.user.id})" if reaction.user else "Пользователь: Аноним"
+    
+    # Если реакция анонимная, но есть actor_chat
+    if not reaction.user and reaction.actor_chat:
+        user_info = f"Чат (аноним): {reaction.actor_chat.title} (ID: {reaction.actor_chat.id})"
+    
+    # Дата
+    from datetime import datetime
+    date_info = f"Дата: {datetime.fromtimestamp(reaction.date)}"
+    
+    # Старые и новые реакции
+    old_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.old_reaction]
+    new_reactions = [r.emoji if hasattr(r, 'emoji') else r.type for r in reaction.new_reaction]
+    
+    reactions_info = f"Старые реакции: {old_reactions}\nНовые реакции: {new_reactions}"
+    
+    # Вывод всей информации
+    info = f"{chat_info}\n{message_info}\n{user_info}\n{date_info}\n{reactions_info}"
+    print(info)
+    bot.send_message(reaction.chat.id, info)
+
+    # Проверка: если автор — нужный ID и реакция 🙊, удаляем сообщение
+    if reaction.user and reaction.user.id == 1408266288:
+        for r in reaction.new_reaction:
+            if hasattr(r, 'emoji') and r.emoji == '🙊':
+                try:
+                    bot.delete_message(reaction.chat.id, reaction.message_id)
+                    bot.send_message(reaction.chat.id, "Сообщение удалено по правилам.")
+                except Exception as e:
+                    print(f"Ошибка при удалении сообщения: {e}")
+                break
 
 # Сделаем обработчик для всех сообщений
 @bot.message_handler(func=lambda message: True)
@@ -277,12 +326,30 @@ def message_listener(message):
     # Запоминаем =3
     author = message.from_user
     last_name = author.last_name
+    chat = message.chat
+    chat_type = chat.type
+
+    print(f"DEBUG: {author.id} {type(author.id)} {message.text}")
+    
+    if chat_type == "group" or chat_type == "supergroup":
+        print(f"Кажется, это в группе пишут. ({chat_type})")
+    
+    if author.id == 8539187812:
+        bot.delete_message(message.chat.id, message.id)
     if not last_name:
         last_name = ""
     if not db.get_user_by_id(author.id):
         db.add_user(telegram_id=author.id,
                     telegram_username=author.username,
                     full_name=author.first_name + last_name)
+    if chat_type == "group" or chat_type == "supergroup":
+        # Заглушка
+        user = db.get_user_by_id(author.id)
+        group = db.get_group_by_id(chat.id)
+        if group:
+            db.upgrade_to_student(author.id, group["group"])
+            db.add_student(group["group"], author.id)
+            
     if check_for_kalik(message):
         kalik(message)
     

@@ -5,6 +5,7 @@ import database
 from datetime import datetime, timedelta
 import modules.gloris_integration as gloris
 from modules.constants import CONSTANTS
+import modules.statistics as stat
 
 
 def _split_pairs_to_lesson_slots(pair_times, lessons):
@@ -101,6 +102,7 @@ def handle(
     markup.add(InlineKeyboardButton("Узнать следующий урок 📘", callback_data="next_lesson"))
 
     # основной ответ
+    stat.add_statistic("double")
     if status == "before":
         hours, minutes = divmod(remaining, 60)
         if hours > 0:
@@ -122,6 +124,12 @@ def handle(
             f"Сейчас идёт {num}-й урок ({subject}), он закончится через {remaining} минут 🕒~ потерпи немножко >w<",
             reply_markup=markup,
         )
+        print(message.chat.id, f" type={type(message.chat.id)}")
+        if message.chat.id == int("-1002949492641"):
+            if "химия" in subject.lower():
+                bot.send_sticker(chat_id, "CAACAgIAAxkBAAE9z6hpFskbbeY6lSc4R_QgOnRbwkROcgACEIoAArNmkEiIvsF6U330LDYE")
+            if "час" in subject.lower():
+                bot.send_sticker(chat_id, "CAACAgIAAxkBAAE98S9pGreUqsvTHZS2F_nSQITSE3jZlwACW4IAAml4uUg4kavT4a6c3TYE")
 
     elif status == "rest":
         next_subj = subject if subject != "ОБЕД" else lessons[num] if num < len(lessons) else None
@@ -164,7 +172,7 @@ def handle_callback(bot: TeleBot):
         for idx, (start, _) in enumerate(lesson_slots):
             if now_time < start and idx < len(lessons):
                 bot.answer_callback_query(call.id)
-                bot.send_message(chat_id, f"Следующий урок — {lessons[idx]} 🧠✨")
+                bot.send_message(chat_id, f"{call.from_user.first_name} нажал на кнопку\nСледующий урок — {lessons[idx]} 🧠✨")
                 return
 
         bot.answer_callback_query(call.id)

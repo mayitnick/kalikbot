@@ -66,8 +66,14 @@ def _download_schedule(day: int, group_id: int):
 # ОСНОВНАЯ ФУНКЦИЯ БИБЛИОТЕКИ
 # ---------------------------------------------------------
 
-def get_schedule(day: int, group_id: int):
+def get_schedule(day: int, group_name: str):
+    group_id = name_to_id(group_name)
+    if group_id is None:
+        return None, False
+
     cache = load_cache()
+    if group_name not in cache:
+        cache[group_name] = {}
 
     new_lessons = _download_schedule(day, group_id)
     if not new_lessons:
@@ -76,36 +82,30 @@ def get_schedule(day: int, group_id: int):
     new_str = "\n".join(new_lessons)
     target_date = get_target_date(day).isoformat()
     day_key = str(day)
-
     is_new = False
+    now_iso = datetime.now().isoformat(timespec='seconds')
 
-    if day_key not in cache:
-        cache[day_key] = {
+    if day_key not in cache[group_name]:
+        cache[group_name][day_key] = {
             "date": target_date,
-            "lessons": new_str
+            "lessons": new_str,
+            "updated_at": now_iso
         }
         save_cache(cache)
         is_new = True
         return new_lessons, is_new
 
-    old_date = cache[day_key]["date"]
-    old_lessons = cache[day_key]["lessons"]
+    old_entry = cache[group_name][day_key]
+    if old_entry["date"] != target_date or old_entry["lessons"] != new_str:
+        cache[group_name][day_key] = {
+            "date": target_date,
+            "lessons": new_str,
+            "updated_at": now_iso
+        }
+        save_cache(cache)
+        is_new = True
 
-    if old_date != target_date:
-        if old_lessons != new_str:
-            cache[day_key] = {
-                "date": target_date,
-                "lessons": new_str
-            }
-            save_cache(cache)
-            is_new = True
-    else:
-        if old_lessons != new_str:
-            cache[day_key]["lessons"] = new_str
-            save_cache(cache)
-            is_new = True
-
-    return cache[day_key]["lessons"].split("\n"), is_new
+    return cache[group_name][day_key]["lessons"].split("\n"), is_new
 
 # ---------------------------------------------------------
 

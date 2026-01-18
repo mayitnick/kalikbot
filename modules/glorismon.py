@@ -12,13 +12,16 @@ def get_day_number():
     """Возвращает номер дня для проверки расписания (1 — понедельник на сайте)."""
     today = datetime.today().weekday()  # Пн=0 ... Вс=6
     if today in (4, 5):  # пятница или суббота
-        return 1  # понедельник
+        day_number = 1  # понедельник
     else:
-        return today + 2  # завтра, day_number на сайте начинается с 1
+        day_number = today + 2  # завтра, day_number на сайте начинается с 1
+    print(f"[Glorismon][DEBUG] Сегодня {today}, day_number для проверки = {day_number}")
+    return day_number
 
 def parse_schedule(day_number=1):
     """Парсинг расписания на один день"""
     url = f"https://xn----3-iddzneycrmpn.xn--p1ai/lesson_table_show/?day={day_number}"
+    print(f"[Glorismon][DEBUG] Запрашиваем URL: {url}")
     try:
         html = requests.get(url, timeout=10).text
     except requests.RequestException as e:
@@ -28,12 +31,17 @@ def parse_schedule(day_number=1):
     soup = BeautifulSoup(html, 'html.parser')
     schedule = {}
 
-    for box in soup.find_all('div', class_='box-group'):
+    boxes = soup.find_all('div', class_='box-group')
+    print(f"[Glorismon][DEBUG] Найдено {len(boxes)} div.box-group на странице")
+
+    for box in boxes:
         btn = box.find('a', class_='btn-group')
         if not btn:
+            print("[Glorismon][DEBUG] Пропускаем box без btn-group")
             continue
         
-        group_id = int(btn.get('id', 'g0')[1:])
+        group_id_str = btn.get('id', 'g0')
+        group_id = int(group_id_str[1:])
         lessons = []
 
         table = box.find('table')
@@ -44,13 +52,18 @@ def parse_schedule(day_number=1):
                     lessons.append(p.get_text(strip=True))
         
         schedule[str(group_id)] = lessons
+        print(f"[Glorismon][DEBUG] Группа {group_id}: найдено {len(lessons)} уроков")
 
+    print(f"[Glorismon][DEBUG] Всего групп для day_number={day_number}: {len(schedule)}")
     return schedule
 
 def load_last_schedule():
     if os.path.exists(SCHEDULE_FILE):
         with open(SCHEDULE_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            print(f"[Glorismon][DEBUG] Загружено last schedule с {len(data.get('groups', {}))} группами")
+            return data
+    print("[Glorismon][DEBUG] last schedule файл не найден")
     return None
 
 def save_last_schedule(data):
@@ -60,22 +73,26 @@ def save_last_schedule(data):
     }
     with open(SCHEDULE_FILE, 'w', encoding='utf-8') as f:
         json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+    print(f"[Glorismon][DEBUG] Сохранено новое расписание с {len(data)} группами")
 
 def check_updates(db, bot):
     """Проверка обновлений и уведомления"""
     day_number = get_day_number()
     new_schedule = parse_schedule(day_number=day_number)
     if new_schedule is None:
+        print("[Glorismon] Не удалось получить расписание, пропускаем итерацию")
         return
 
     last_data_wrapper = load_last_schedule()
     last_data = last_data_wrapper.get("groups", {}) if last_data_wrapper else {}
+    print(f"[Glorismon][DEBUG] Сравниваем с {len(last_data)} группами из последнего файла")
 
     updated_groups = []
 
     for group_id, lessons in new_schedule.items():
         if last_data.get(group_id) != lessons:
             updated_groups.append(group_id)
+            print(f"[Glorismon][DEBUG] Обновления обнаружены для группы {group_id}")
 
     # Отправляем уведомления только если файл уже был (чтобы не пугать при первом запуске)
     if last_data_wrapper:
@@ -88,6 +105,8 @@ def check_updates(db, bot):
                     print(f"[Glorismon] Отправлено обновленное расписание для {group['group']}")
                 except Exception as e:
                     print(f"[Glorismon] Ошибка при отправке сообщения в группу {group['group']}: {e}")
+            else:
+                print(f"[Glorismon][DEBUG] Группа {group_id} не найдена в БД или tg_group_id отсутствует")
 
     # Сохраняем новое расписание
     save_last_schedule(new_schedule)

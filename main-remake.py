@@ -26,6 +26,8 @@ import importlib
 import pkgutil
 import commands
 from commands import double
+from modules import glorismon
+import threading
 
 COMMANDS = []
 
@@ -391,6 +393,13 @@ def callback_inline(call):
             group_name = data.split(".")[1]
             group = db.get_group_by_name(group_name)
             # Доделать надо, я спать :|
+
+t = threading.Thread(
+    target=glorismon.start_monitoring,
+    kwargs={"interval": 30},
+    daemon=True
+)
+t.start()
 
 me = bot.get_me()
 print(f"Я запущен :3 У меня ник @{me.username} с id {me.id}.\nГотов помогать!")

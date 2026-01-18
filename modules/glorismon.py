@@ -11,10 +11,10 @@ SCHEDULE_FILE = "lastschedule.json"
 def get_day_number():
     """Возвращает номер дня для проверки расписания (1 — понедельник на сайте)."""
     today = datetime.today().weekday()  # Пн=0 ... Вс=6
-    if today in (4, 5):  # пятница или суббота
+    if today in (4, 5, 6):  # пятница, суббота, воскресенье
         day_number = 1  # понедельник
     else:
-        day_number = today + 2  # завтра, day_number на сайте начинается с 1
+        day_number = today + 2  # завтра
     print(f"[Glorismon][DEBUG] Сегодня {today}, day_number для проверки = {day_number}")
     return day_number
 

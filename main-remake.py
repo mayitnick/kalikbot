@@ -396,7 +396,7 @@ def callback_inline(call):
 
 t = threading.Thread(
     target=glorismon.start_monitoring,
-    kwargs={"interval": 30},
+    kwargs={"db": db, "bot": bot},
     daemon=True
 )
 t.start()

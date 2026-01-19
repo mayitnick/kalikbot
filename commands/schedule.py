@@ -116,20 +116,33 @@ def handle(message: Message, bot: TeleBot, db: database.Database,
         return
 
     # 5) получаем расписание (gloris.get_schedule возвращает schedule, is_new)
+    print(
+        "[SCHEDULE DEBUG]",
+        "day =", day,
+        "group_id =", group_id,
+        "chat_id =", message.chat.id
+    )
     try:
         schedule, is_new = gloris.get_schedule(day, group_id)
-    except Exception:
+        print(
+            "[GLORIS RESPONSE]",
+            "schedule =", repr(schedule),
+            "is_new =", is_new
+        )
+    except Exception as e:
+        print("[GLORIS EXCEPTION]", repr(e))
         traceback.print_exc()
         bot.reply_to(
             message,
-            "Ой… что-то пошло не так при получении расписания 😿\n"
-            "Попробуй ещё раз или проверь формат группы.",
+            "Мр-р… ой, то есть фр фырр-р.. я не смог достучаться до Глориса 😿\n"
+            "Похоже, он сейчас не отвечает или обиделся.",
             parse_mode="HTML"
         )
         return
 
     # 6) формируем ответ
     if not schedule:
+        print("[EMPTY SCHEDULE]", "day =", day, "group_id =", group_id)
         bot.reply_to(message, CONSTANTS.schedule_not_found)
         return
 

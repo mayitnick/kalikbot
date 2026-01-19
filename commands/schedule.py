@@ -123,7 +123,7 @@ def handle(message: Message, bot: TeleBot, db: database.Database,
         "chat_id =", message.chat.id
     )
     try:
-        schedule, is_new = gloris.get_schedule(day, group_id)
+        schedule, is_new = gloris.get_schedule_by_id(day, group_id)
         print(
             "[GLORIS RESPONSE]",
             "schedule =", repr(schedule),

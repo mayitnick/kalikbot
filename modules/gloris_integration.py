@@ -39,6 +39,14 @@ def save_cache(cache):
     except Exception as e:
         print(f"[ERROR] Ошибка при сохранении кэша: {e}")
 
+def get_schedule_by_id(day: int, group_id: int):
+    # ищем name по id
+    group_name = next((k for k,v in name_to_id_dict.items() if v==group_id), None)
+    if not group_name:
+        print(f"[ERROR] Группа {group_id} не найдена в словаре (по id)")
+        return None, False
+    return get_schedule(day, group_name)
+
 def get_target_date(weekday: int):
     try:
         today = datetime.now().date()

@@ -172,7 +172,7 @@ def handle_callback(bot: TeleBot):
             return
 
         schedule_times = db.get_schedule()
-        lesson_slots = _split_pairs_to_lesson_slots(schedule_times)
+        lesson_slots = _split_pairs_to_lesson_slots(lessons, schedule_times)
 
         now_time = datetime.now().time()
         for idx, (start, _) in enumerate(lesson_slots):

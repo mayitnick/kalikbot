@@ -92,7 +92,7 @@ def handle(
         return
 
     group_id = group["gloris_id"]
-    lessons, _ = gloris.get_schedule(date, group_id)
+    lessons, _ = gloris.get_schedule_by_id(date, group_id)
     if not lessons:  # на случай ошибки парсинга
         bot.reply_to(message, "Не удалось получить расписание 😿")
         return

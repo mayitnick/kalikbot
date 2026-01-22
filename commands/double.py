@@ -166,7 +166,7 @@ def handle_callback(bot: TeleBot):
 
         group_id = group["gloris_id"]
         date = datetime.weekday(datetime.now()) + 1
-        lessons, _ = gloris.get_schedule(date, group_id)
+        lessons, _ = gloris.get_schedule_by_id(date, group_id)
         if not lessons:  # на случай ошибки парсинга
             bot.reply_to(call.message, "Не удалось получить расписание 😿")
             return

@@ -133,6 +133,18 @@ def send_long_message(chat_id, text):
     for i in range(0, len(text), max_len):
         bot.send_message(chat_id, text[i:i+max_len])
 
+@bot.message_handler(commands=['now'])
+def send_now_stub(message):
+    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови информацию про текущую пару :3")
+    from commands import double
+    double.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
+
+@bot.message_handler(commands=['db'])
+def send_now_stub(message):
+    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови расписку на завтра :3")
+    from commands import schedule
+    schedule.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
+
 @bot.message_handler(commands=["analyze"])
 def analyze_command(message):
     print("DEBUG: /analyze вызвана")  # Старт команды
@@ -356,17 +368,6 @@ def message_listener(message):
     if check_for_kalik(message):
         kalik(message)
 
-@bot.message_handler(commands=['now'])
-def send_now_stub(message):
-    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови информацию про текущую пару :3")
-    from commands import double
-    double.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
-
-@bot.message_handler(commands=['db'])
-def send_now_stub(message):
-    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови расписку на завтра :3")
-    from commands import schedule
-    schedule.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
 
 def kalik(message):
     text = message.text.lower()

@@ -167,19 +167,46 @@ def handle_callback(bot: TeleBot):
         group_id = group["gloris_id"]
         date = datetime.weekday(datetime.now()) + 1
         lessons, _ = gloris.get_schedule_by_id(date, group_id)
-        if not lessons:  # на случай ошибки парсинга
+        if not lessons:
             bot.reply_to(call.message, "Не удалось получить расписание 😿")
             return
 
-        schedule_times = db.get_schedule()
-        lesson_slots = _split_pairs_to_lesson_slots(lessons, schedule_times)
+        schedule_times = db.get_schedule()  # блоками
+        lesson_slots, slot_subjects = _split_pairs_to_lesson_slots(schedule_times, lessons)
 
         now_time = datetime.now().time()
-        for idx, (start, _) in enumerate(lesson_slots):
-            if now_time < start and idx < len(lessons):
-                bot.answer_callback_query(call.id)
-                bot.send_message(chat_id, f"{call.from_user.first_name} нажал на кнопку\nСледующий урок — {lessons[idx]} 🧠✨")
-                return
+        next_subject = None
+        minutes_until = None
+
+        for idx, (start, end) in enumerate(lesson_slots):
+            if now_time < start:
+                next_subject = slot_subjects[idx]
+                minutes_until = int((datetime.combine(datetime.today(), start) - datetime.now()).total_seconds() // 60)
+                break
+            elif start <= now_time <= end:
+                # если мы уже в паре, следующий это конец текущего блока
+                current_subject = slot_subjects[idx]
+                j = idx
+                while j + 1 < len(slot_subjects) and slot_subjects[j + 1] == current_subject:
+                    j += 1
+                if j + 1 < len(slot_subjects):
+                    next_subject = slot_subjects[j + 1]
+                    start_next = lesson_slots[j + 1][0]
+                    minutes_until = int((datetime.combine(datetime.today(), start_next) - datetime.now()).total_seconds() // 60)
+                break
 
         bot.answer_callback_query(call.id)
-        bot.send_message(chat_id, "Больше уроков на сегодня нет 🌙✨")
+        
+        if next_subject:
+            if "ОБЕД" in next_subject.upper():
+                bot.send_message(
+                    chat_id,
+                    f"{call.from_user.first_name} нажал на кнопку\nСейчас отдых 🌿 Следующее занятие после него через {minutes_until} мин ✨"
+                )
+            else:
+                bot.send_message(
+                    chat_id,
+                    f"{call.from_user.first_name} нажал на кнопку\nСледующий урок — {next_subject} 🧠✨ (через {minutes_until} мин)"
+                )
+        else:
+            bot.send_message(chat_id, "Больше уроков на сегодня нет 🌙✨")

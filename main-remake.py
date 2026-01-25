@@ -28,6 +28,7 @@ import commands
 from commands import double
 from modules import glorismon
 import threading
+import random
 
 COMMANDS = []
 
@@ -354,7 +355,19 @@ def message_listener(message):
             
     if check_for_kalik(message):
         kalik(message)
-    
+
+@bot.message_handler(commands=['now'])
+def send_now_stub(message):
+    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови информацию про текущую пару :3")
+    from commands import double
+    double.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
+
+@bot.message_handler(commands=['db'])
+def send_now_stub(message):
+    bot.reply_to(message, random.choice(CONSTANTS.command_to_human_dialogue) + "\nЛови расписку на завтра :3")
+    from commands import schedule
+    schedule.handle(message, bot, db, perm, CONSTANTS, FOUNDER_ID)
+
 def kalik(message):
     text = message.text.lower()
     
@@ -381,7 +394,9 @@ def kalik(message):
     # 3. Если ничего не подошло
     # bot.reply_to(message, random.choice(CONSTANTS.dont_know))
     # Раньше бот не знал что делать, а теперь, мы отправляем нейросетке сообщение >:3
-    send_to_ai(message)
+    # Снова отправляем то, что не знаем, что делать, потому что нейронку ломануть можно, а на проде не надо такого
+    # send_to_ai(message)
+    bot.reply_to(message, random.choice(CONSTANTS.dont_know))
 
 double.handle_callback(bot)
 

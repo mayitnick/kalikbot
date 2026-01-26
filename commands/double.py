@@ -88,7 +88,7 @@ def handle(
     chat_id = message.chat.id
     group = db.get_group_by_tg_group_id(chat_id)
     if not group:
-        bot.reply_to(message, CONSTANTS.tg_no_group)
+        bot.reply_to(message, "Я ещё не привязан к расписанию этой группы.\nЭто можно сделать чуть позже - я пока учусь 🦊\nСкоро здесь появится кнопка для настройки.")
         return
 
     group_id = group["gloris_id"]

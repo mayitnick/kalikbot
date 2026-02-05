@@ -1,27 +1,62 @@
 import json
 import os
 
+default_schedule = [
+    "08:20-09:05",
+    "09:05-09:50",
+    "10:00-10:45",
+    "10:45-11:30",
+    "11:35-12:20",
+    "12:25-13:10",
+    "13:15-14:00",
+    "14:00-14:45",
+    "14:50-15:35",
+    "15:40-16:25"
+]
+
 class Database:
     def __init__(self, filename='students.json'):
         self.filename = filename
-        self.data = {"students": []}  # корневой объект
+        self.data = {"students": [], "groups": [], "schedule": []}  # корневой объект
         self.load()
 
     def load(self):
-        """Загружает БД из файла или создаёт новый файл."""
+        """Загружает БД, сохраняя старых студентов и добавляя новые разделы."""
         if os.path.exists(self.filename):
             try:
                 with open(self.filename, 'r', encoding='utf-8') as file:
-                    self.data = json.load(file)
+                    loaded_data = json.load(file)
+                
+                # Если это был старый формат (просто список), 
+                # превращаем его в правильный словарик
+                if isinstance(loaded_data, list):
+                    print("Ой, нашла старый формат списка! Перекладываю в новую корзинку.")
+                    self.data = {
+                        "students": loaded_data,
+                        "groups": [],
+                        "schedule": []
+                    }
+                else:
+                    # Если это уже словарик, просто проверяем, 
+                    # чтобы в нем были все нужные нам разделы
+                    self.data = loaded_data
+                    
                     if "students" not in self.data:
-                        # если старая структура — пересоздать
-                        self.data = {"students": [], "groups": [], "schedule": []}
+                        self.data["students"] = []
+                    if "groups" not in self.data:
+                        self.data["groups"] = []
+                    if "schedule" not in self.data:
+                        self.data["schedule"] = default_schedule
+                # Сохраним обновленную структуру, чтобы в следующий раз всё было на местах
+                self.save()
+                    
             except json.JSONDecodeError:
-                print("Ошибка JSON. Создаю новую базу.")
-                self.data = {"students": []}
+                print("Файлик JSON оказался капризным. Создаю пустую структуру.")
+                self.data = {"students": [], "groups": [], "schedule": []}
                 self.save()
         else:
-            print("Файл не найден. Создаю новый.")
+            print("Файлика нет, строю новый домик для данных.")
+            self.data = {"students": [], "groups": [], "schedule": []}
             self.save()
 
     def save(self):

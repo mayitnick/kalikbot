@@ -107,13 +107,57 @@ def get_current_pair(schedule_times):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    if message.chat.type == 'private':
+    chat_type = message.chat.type
+    
+    if chat_type == 'private':
         markup = types.InlineKeyboardMarkup()
         bot_username = (bot.get_me()).username
         add_to_group_url = f"https://t.me/{bot_username}?startgroup=true"
         button1 = types.InlineKeyboardButton("Добавь меня в группу :3", url=add_to_group_url)
         markup.add(button1)
         bot.reply_to(message, "Привет! Я Калик, и мой функционал раскрывается только в группе!", reply_markup=markup)
+    
+    elif chat_type in ['group', 'supergroup']:
+        # Проверяем, не настроена ли уже группа
+        existing_group = db.get_group_by_id(message.chat.id)
+        if existing_group:
+            bot.reply_to(message, f"Эта группа уже настроена как **{existing_group['group']}**! ✨")
+        else:
+            markup = types.InlineKeyboardMarkup()
+            # В callback_data запишем команду для настройки
+            button = types.InlineKeyboardButton("Настроить группу 🛠", callback_data="setup_group_start")
+            markup.add(button)
+            bot.reply_to(message, "Привет всем! Я готов помогать вашей группе. Нажмите кнопку ниже, чтобы я знал, кто вы! 👇", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == "setup_group_start")
+def callback_setup_group(call):
+    # Проверяем, админ ли тот, кто нажал (чтобы не было mischief!)
+    chat_member = bot.get_chat_member(call.message.chat.id, call.from_user.id)
+    if chat_member.status not in ['administrator', 'creator'] and call.from_user.id != FOUNDER_ID:
+        bot.answer_callback_query(call.id, "Ой, только староста или админ могут это сделать! 🐾", show_alert=True)
+        return
+
+    msg = bot.send_message(call.message.chat.id, "Хорошо! Теперь напиши название группы в формате `ИС-11-25` (точно как в расписании) 👇")
+    # Регистрируем следующий шаг
+    bot.register_next_step_handler(msg, process_group_name_step)
+    bot.answer_callback_query(call.id)
+
+def process_group_name_step(message):
+    group_name = message.text.strip().upper() # Приведем к верхнему регистру для порядка
+    chat_id = message.chat.id
+    
+    # Простая проверка формата (можно усложнить через re)
+    if "-" not in group_name:
+        msg = bot.reply_to(message, "Хмм, кажется, формат не совсем верный... Попробуй еще раз (например, ИС-11-25):")
+        bot.register_next_step_handler(msg, process_group_name_step)
+        return
+
+    # Сохраняем в базу данных (используем твои методы из database.py)
+    db.create_group(group_name)
+    db.set_tg_group_id(group_name, chat_id)
+    
+    bot.reply_to(message, f"Ура! Группа **{group_name}** успешно привязана к этому чату! Теперь я всё знаю. ✨🦊")
+
 
 @bot.message_handler(commands=['ping'])
 def ping_command(message):
